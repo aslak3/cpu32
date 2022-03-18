@@ -1,6 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
-use work.P_REGS.all;
+use work.P_REGISTERS.all;
 
 entity registers_tb is
 end entity;
@@ -152,7 +152,7 @@ end architecture;
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
-use work.P_REGS.all;
+use work.P_REGISTERS.all;
 
 entity programcounter_tb is
 end entity;
@@ -218,7 +218,7 @@ end architecture;
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
-use work.P_REGS.all;
+use work.P_REGISTERS.all;
 
 entity temporary_tb is
 end entity;

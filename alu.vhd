@@ -1,10 +1,8 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
+use work.P_ALU.all;
 
-package P_ALU is
-	subtype T_ALU_OP is STD_LOGIC_VECTOR (4 downto 0);
-
-	constant OP_ADD :			T_ALU_OP := '0' & x"0";
+package P_ALU_OPS is
 	constant OP_ADDC :			T_ALU_OP := '0' & x"1";
 	constant OP_SUB :			T_ALU_OP := '0' & x"2";
 	constant OP_SUBC :			T_ALU_OP := '0' & x"3";
@@ -34,6 +32,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.P_ALU.all;
+use work.P_ALU_OPS.all;
 
 entity alu is
 	port (

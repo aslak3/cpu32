@@ -1,20 +1,8 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
-
-package P_REGS is
-	subtype T_REG is STD_LOGIC_VECTOR (31 downto 0);
-	type T_REGS is ARRAY (0 to 15) of T_REG;
-	subtype T_REG_INDEX is STD_LOGIC_VECTOR (3 downto 0);
-
-	constant DEFAULT_REG : T_REG := (others => '0');
-	constant DEFAULT_PC : T_REG := (others => '0');
-end package;
-
-library IEEE;
-use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
-use work.P_REGS.all;
+use work.P_REGISTERS.all;
 
 entity registers is
 	port (
@@ -37,51 +25,52 @@ entity registers is
 end entity;
 
 architecture behavioral of registers is
-	signal registers : T_REGS := (others => DEFAULT_REG);
+	signal register_file : T_REGS := (others => DEFAULT_REG);
 begin
 	process (reset, clock)
 	begin
 		if (reset = '1') then
-			registers <= (others => DEFAULT_REG);
+			register_file <= (others => DEFAULT_REG);
 		elsif (clock'Event and clock = '1') then
 			if (clear = '1') then
 --pragma synthesis_off
 				report "Registers: Clearing reg " & to_hstring(write_index);
 --pragma synthesis_on
-				registers (to_integer(unsigned(write_index))) <= DEFAULT_REG;
+				register_file (to_integer(unsigned(write_index))) <= DEFAULT_REG;
 			elsif (write = '1') then
 --pragma synthesis_off
 				report "Registers: Writing " & to_hstring(input) & " into reg " & to_hstring(write_index);
 --pragma synthesis_on
-				registers (to_integer(unsigned(write_index))) <= input;
+				register_file (to_integer(unsigned(write_index))) <= input;
 			end if;
 			if (inc = '1') then
 --pragma synthesis_off
 				report "Registers: Incrementing reg " & to_hstring(incdec_index);
 --pragma synthesis_on
-				registers (to_integer(unsigned(incdec_index))) <=
-					registers (to_integer(unsigned(incdec_index))) + 4;
+				register_file (to_integer(unsigned(incdec_index))) <=
+					register_file (to_integer(unsigned(incdec_index))) + 4;
 			elsif (dec = '1') then
 --pragma synthesis_off
 				report "Registers: Decrementing reg " & to_hstring(incdec_index);
 --pragma synthesis_on
-				registers (to_integer(unsigned(incdec_index))) <=
-					registers (to_integer(unsigned(incdec_index))) - 4;
+				register_file (to_integer(unsigned(incdec_index))) <=
+					register_file (to_integer(unsigned(incdec_index))) - 4;
 			end if;
 		end if;
 	end process;
 
-	reg1_output <= registers (to_integer(unsigned(read_reg1_index)));
-	reg2_output <= registers (to_integer(unsigned(read_reg2_index)));
-	reg3_output <= registers (to_integer(unsigned(read_reg3_index)));
-
+	reg1_output <= register_file (to_integer(unsigned(read_reg1_index)));
+	reg2_output <= register_file (to_integer(unsigned(read_reg2_index)));
+	reg3_output <= register_file (to_integer(unsigned(read_reg3_index)));
 end architecture;
+
+---
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
-use work.P_REGS.all;
+use work.P_REGISTERS.all;
 
 entity programcounter is
 	port (
@@ -123,7 +112,7 @@ end architecture;
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
-use work.P_REGS.all;
+use work.P_REGISTERS.all;
 
 entity temporary is
 	port (
@@ -159,7 +148,7 @@ end architecture;
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
-use work.P_REGS.all;
+use work.P_REGISTERS.all;
 use work.P_CONTROL.all;
 use work.P_ALU.all;
 use work.P_BUSINTERFACE.all;
@@ -185,36 +174,36 @@ entity instruction is
 end entity;
 
 architecture behavioral of instruction is
-	signal instruction : T_REG := DEFAULT_REG;
+	signal instruction_register : T_REG := DEFAULT_REG;
 begin
 	process (reset, clock)
 	begin
 		if (reset = '1') then
-			instruction <= DEFAULT_REG;
+			instruction_register <= DEFAULT_REG;
 		elsif (clock'event and clock = '1') then
 			if (write = '1') then
 --pragma synthesis_off
 				report "instruction: writing " & to_hstring(input);
 --pragma synthesis_on
-				instruction <= input;
+				instruction_register <= input;
 			end if;
 		end if;
 	end process;
 
 	-- shared
-	opcode <= instruction (31 downto 24);
-	reg1_index <= instruction (23 downto 20);
-	reg2_index <= instruction (19 downto 16);
-	reg3_index <= instruction (15 downto 12);
-	imm_word <= instruction (15 downto 0);
-	imm_byte <= instruction (7 downto 0);
+	opcode <= instruction_register (31 downto 24);
+	reg1_index <= instruction_register (23 downto 20);
+	reg2_index <= instruction_register (19 downto 16);
+	reg3_index <= instruction_register (15 downto 12);
+	imm_word <= instruction_register (15 downto 0);
+	imm_byte <= instruction_register (7 downto 0);
 
-	cycle_width <= instruction (15 downto 14);
-	cycle_signed <= instruction (13);
+	cycle_width <= instruction_register (15 downto 14);
+	cycle_signed <= instruction_register (13);
 
-	flow_cares <= instruction (15 downto 12);
-	flow_polarity <= instruction (11 downto 8);
+	flow_cares <= instruction_register (15 downto 12);
+	flow_polarity <= instruction_register (11 downto 8);
 
-	-- LSB of instruction; 0=multi, 1=single
-	alu_op <= instruction (24) & instruction (11 downto 8);
+	-- LSB of opcode; 0=multi, 1=single
+	alu_op <= instruction_register (24) & instruction_register (11 downto 8);
 end architecture;

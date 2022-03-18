@@ -3,7 +3,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.P_ALU.all;
-use work.P_REGS.all;
+use work.P_REGISTERS.all;
 use work.P_CONTROL.all;
 use work.P_BUSINTERFACE.all;
 

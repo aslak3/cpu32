@@ -3,6 +3,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.P_ALU.all;
+use work.P_ALU_OPS.all;
 
 entity alu_tb is
 end entity;

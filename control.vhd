@@ -1,9 +1,63 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use work.P_ALU.all;
+use work.P_REGISTERS.all;
+use work.P_CONTROL.all;
+use work.P_BUSINTERFACE.all;
 
-package P_CONTROL is
-	subtype T_OPCODE is STD_LOGIC_VECTOR (7 downto 0);
+entity control is
+	port (
+		clock : in STD_LOGIC;
+		reset : in STD_LOGIC;
+		read : out STD_LOGIC;
+		write : out STD_LOGIC;
+		cycle_width : out T_CYCLE_WIDTH;
+		cycle_signed : out STD_LOGIC;
+		halted : out STD_LOGIC;
 
+		alu_reg2_mux_sel : out T_ALU_REG2_MUX_SEL;
+		alu_reg3_mux_sel : out T_ALU_REG3_MUX_SEL;
+		alu_op_mux_sel : out T_ALU_OP_MUX_SEL;
+		regs_input_mux_sel : out T_REGS_INPUT_MUX_SEL;
+		regs_write_index_mux_sel : out T_REGS_WRITE_INDEX_MUX_SEL;
+		regs_read_reg1_index_mux_sel : out T_REGS_READ_REG1_INDEX_MUX_SEL;
+		pc_input_mux_sel : out T_PC_INPUT_MUX_SEL;
+		temporary_input_mux_sel : out T_TEMPORARY_INPUT_MUX_SEL;
+		address_mux_sel : out T_ADDRESS_MUX_SEL;
+		data_out_mux_sel : out T_DATA_OUT_MUX_SEL;
+
+		stack_multi_reg_index : out T_REG_INDEX;
+
+		instruction_write : out STD_LOGIC;
+		instruction_opcode : in T_OPCODE;
+		instruction_flow_cares : in T_FLOWTYPE;
+		instruction_flow_polarity : in T_FLOWTYPE;
+		instruction_cycle_width : in T_CYCLE_WIDTH;
+		instruction_cycle_signed : in STD_LOGIC;
+		instruction_imm_word : in STD_LOGIC_VECTOR (15 downto 0);
+
+		alu_carry_in : out STD_LOGIC;
+		alu_carry_out : in STD_LOGIC;
+		alu_zero_out : in STD_LOGIC;
+		alu_neg_out : in STD_LOGIC;
+		alu_over_out : in STD_LOGIC;
+
+		regs_clear : out STD_LOGIC;
+		regs_write : out STD_LOGIC;
+		regs_inc : out STD_LOGIC;
+		regs_dec : out STD_LOGIC;
+
+		pc_jump : out STD_LOGIC;
+		pc_increment : out STD_LOGIC;
+
+		temporary_write : out STD_LOGIC;
+		temporary_output : in T_REG
+);
+end entity;
+
+architecture behavioural of control is
 	-- Base:
 	-- 31 downto 24 : opcode
 	constant OPCODE_NOP :			T_OPCODE := x"00";
@@ -74,7 +128,7 @@ package P_CONTROL is
 	constant OPCODE_PUSHMULTI :		T_OPCODE := x"52";
 	constant OPCODE_POPMULTI :		T_OPCODE := x"53";
 
-	subtype T_FLOWTYPE is STD_LOGIC_VECTOR (3 downto 0);
+	-- Used by jump etc
 	constant FLOWTYPE_CARRY :		integer := 3;
 	constant FLOWTYPE_ZERO :		integer := 2;
 	constant FLOWTYPE_NEG :			integer := 1;
@@ -93,90 +147,6 @@ package P_CONTROL is
 		S_PUSH1, S_POP1,
 		S_PUSHMULTI1, S_PUSHMULTI2, S_POPMULTI1, S_POPMULTI2
 	);
-
-	type T_ALU_REG2_MUX_SEL is
-		( S_INSTRUCTION_REG2, S_PC );
-	type T_ALU_REG3_MUX_SEL is
-		( S_INSTRUCTION_REG3, S_INSTRUCTION_IMM_BYTE, S_DATA_IN );
-	type T_ALU_OP_MUX_SEL is
-		( S_INSTRUCTION_ALU_OP, S_ADD );
-	type T_REGS_INPUT_MUX_SEL is
-		( S_ALU_RESULT, S_DATA_IN, S_INSTRUCTION_IMM_WORD_UPPER, S_INSTRUCTION_IMM_WORD_LOWER );
-	type T_REGS_WRITE_INDEX_MUX_SEL is
-		( S_INSTRUCTION_REG1, S_STACK_MULTI );
-	type T_REGS_READ_REG1_INDEX_MUX_SEL is
-		( S_INSTRUCTION_REG1, S_STACK_MULTI );
-	type T_PC_INPUT_MUX_SEL is
-		( S_ALU_RESULT, S_DATA_IN, S_TEMPORARY_OUTPUT, S_INSTRUCTION_REG1 );
-	type T_TEMPORARY_INPUT_MUX_SEL is
-		( S_ALU_RESULT, S_DATA_IN );
-	type T_ADDRESS_MUX_SEL is
-		( S_PC, S_INSTRUCTION_REG2, S_ALU_RESULT, S_TEMPORARY_OUTPUT );
-	type T_DATA_OUT_MUX_SEL is
-		( S_PC, S_INSTRUCTION_REG1 );
-
-end package;
-
-library IEEE;
-use IEEE.STD_LOGIC_1164.all;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
-use IEEE.NUMERIC_STD.ALL;
-use work.P_ALU.all;
-use work.P_REGS.all;
-use work.P_CONTROL.all;
-use work.P_BUSINTERFACE.all;
-
-entity control is
-	port (
-		clock : in STD_LOGIC;
-		reset : in STD_LOGIC;
-		read : out STD_LOGIC;
-		write : out STD_LOGIC;
-		cycle_width : out T_CYCLE_WIDTH;
-		cycle_signed : out STD_LOGIC;
-		halted : out STD_LOGIC;
-
-		alu_reg2_mux_sel : out T_ALU_REG2_MUX_SEL;
-		alu_reg3_mux_sel : out T_ALU_REG3_MUX_SEL;
-		alu_op_mux_sel : out T_ALU_OP_MUX_SEL;
-		regs_input_mux_sel : out T_REGS_INPUT_MUX_SEL;
-		regs_write_index_mux_sel : out T_REGS_WRITE_INDEX_MUX_SEL;
-		regs_read_reg1_index_mux_sel : out T_REGS_READ_REG1_INDEX_MUX_SEL;
-		pc_input_mux_sel : out T_PC_INPUT_MUX_SEL;
-		temporary_input_mux_sel : out T_TEMPORARY_INPUT_MUX_SEL;
-		address_mux_sel : out T_ADDRESS_MUX_SEL;
-		data_out_mux_sel : out T_DATA_OUT_MUX_SEL;
-
-		stack_multi_reg_index : out T_REG_INDEX;
-		
-		instruction_write : out STD_LOGIC;
-		instruction_opcode : in T_OPCODE;
-		instruction_flow_cares : in T_FLOWTYPE;
-		instruction_flow_polarity : in T_FLOWTYPE;
-		instruction_cycle_width : in T_CYCLE_WIDTH;
-		instruction_cycle_signed : in STD_LOGIC;
-		instruction_imm_word : in STD_LOGIC_VECTOR (15 downto 0);
-
-		alu_carry_in : out STD_LOGIC;
-		alu_carry_out : in STD_LOGIC;
-		alu_zero_out : in STD_LOGIC;
-		alu_neg_out : in STD_LOGIC;
-		alu_over_out : in STD_LOGIC;
-
-		regs_clear : out STD_LOGIC;
-		regs_write : out STD_LOGIC;
-		regs_inc : out STD_LOGIC;
-		regs_dec : out STD_LOGIC;
-
-		pc_jump : out STD_LOGIC;
-		pc_increment : out STD_LOGIC;
-
-		temporary_write : out STD_LOGIC;
-		temporary_output : in T_REG
-);
-end entity;
-
-architecture behavioural of control is
 begin
 	process (RESET, CLOCK)
 		variable state : T_STATE := S_FETCH1;
