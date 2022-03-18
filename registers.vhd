@@ -171,8 +171,8 @@ entity instruction is
 		write : in STD_LOGIC;
 		input : in T_REG;
 		opcode : out T_OPCODE;
-		immediate_word : out STD_LOGIC_VECTOR (15 downto 0);
-		immediate_byte : out STD_LOGIC_VECTOR (7 downto 0);
+		imm_word : out STD_LOGIC_VECTOR (15 downto 0);
+		imm_byte : out STD_LOGIC_VECTOR (7 downto 0);
 		reg1_index : out T_REG_INDEX;
 		reg2_index : out T_REG_INDEX;
 		reg3_index : out T_REG_INDEX;
@@ -180,8 +180,7 @@ entity instruction is
 		cycle_signed : out STD_LOGIC;
 		flow_cares : out T_FLOWTYPE;
 		flow_polarity : out T_FLOWTYPE;
-		alu_op : out STD_LOGIC_VECTOR (3 downto 0);
-		alu_immediate : out STD_LOGIC_VECTOR (7 downto 0)
+		alu_op : out T_ALU_OP
 	);
 end entity;
 
@@ -207,8 +206,8 @@ begin
 	reg1_index <= instruction (23 downto 20);
 	reg2_index <= instruction (19 downto 16);
 	reg3_index <= instruction (15 downto 12);
-	immediate_word <= instruction (15 downto 0);
-	immediate_byte <= instruction (7 downto 0);
+	imm_word <= instruction (15 downto 0);
+	imm_byte <= instruction (7 downto 0);
 
 	cycle_width <= instruction (15 downto 14);
 	cycle_signed <= instruction (13);
@@ -216,6 +215,6 @@ begin
 	flow_cares <= instruction (15 downto 12);
 	flow_polarity <= instruction (11 downto 8);
 
-	alu_op <= instruction (11 downto 8);
-	alu_immediate <= instruction (7 downto 0);
+	-- LSB of instruction; 0=multi, 1=single
+	alu_op <= instruction (24) & instruction (11 downto 8);
 end architecture;

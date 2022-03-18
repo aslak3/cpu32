@@ -57,12 +57,12 @@ package P_CONTROL is
 	-- 23 downto 20 : destination register
 	-- 19 downto 16 : operand register1
 	-- 15 downto 12 : operand register2 (ALUM only)
-	-- 11 downto 8 : operation code
+	-- 24, 11 downto 8 : operation code
 	-- 7 downto 0 : quick immediate value (ALUMQ only)
 	constant OPCODE_ALUM :			T_OPCODE := x"40";
-	constant OPCODE_ALUMI :			T_OPCODE := x"41";
-	constant OPCODE_ALUMQ :			T_OPCODE := x"42";
-	constant OPCODE_ALUS :			T_OPCODE := x"43";
+	constant OPCODE_ALUMI :			T_OPCODE := x"42";
+	constant OPCODE_ALUMQ :			T_OPCODE := x"44";
+	constant OPCODE_ALUS :			T_OPCODE := x"49";
 
 	-- Push and pop:
 	-- 31 downto 24 : opcode (PUSH, POP, PUSHMULTI, POPMULTI)
