@@ -38,7 +38,7 @@ use work.P_ALU.all;
 entity alu is
 	port (
 		op : in T_ALU_OP;
-		left, right : in STD_LOGIC_VECTOR (31 downto 0);
+		reg2, reg3 : in STD_LOGIC_VECTOR (31 downto 0);
 		carry_in : in STD_LOGIC;
 		result : out STD_LOGIC_VECTOR (31 downto 0);
 		carry_out : out STD_LOGIC;
@@ -50,64 +50,64 @@ end entity;
 
 architecture behavioural of alu is
 begin
-	process (left, right, op, carry_in)
-		variable temp_left  : STD_LOGIC_VECTOR (32 downto 0) := (others => '0');
-		variable temp_right : STD_LOGIC_VECTOR (32 downto 0) := (others => '0');
+	process (reg2, reg3, op, carry_in)
+		variable temp_reg2  : STD_LOGIC_VECTOR (32 downto 0) := (others => '0');
+		variable temp_reg3 : STD_LOGIC_VECTOR (32 downto 0) := (others => '0');
 		variable temp_result : STD_LOGIC_VECTOR (32 downto 0) := (others => '0');
 		variable give_result : STD_LOGIC := '0';
 	begin
 		give_result := '1';
-		temp_left := '0' & LEFT (31 downto 0);
-		temp_right := '0' & RIGHT (31 downto 0);
+		temp_reg2 := '0' & reg2 (31 downto 0);
+		temp_reg3 := '0' & reg3 (31 downto 0);
 
 		case OP is
 			when OP_ADD =>
-				temp_result := temp_right + temp_left;
+				temp_result := temp_reg3 + temp_reg2;
 			when OP_ADDC =>
-				temp_result := temp_right + temp_left + carry_in;
+				temp_result := temp_reg3 + temp_reg2 + carry_in;
 			when OP_SUB =>
-				temp_result := temp_right - temp_left;
+				temp_result := temp_reg3 - temp_reg2;
 			when OP_SUBC =>
-				temp_result := temp_right - temp_left - carry_in;
+				temp_result := temp_reg3 - temp_reg2 - carry_in;
 			when OP_AND =>
-				temp_result := temp_right and temp_left;
+				temp_result := temp_reg3 and temp_reg2;
 			when OP_OR =>
-				temp_result := temp_right or temp_left;
+				temp_result := temp_reg3 or temp_reg2;
 			when OP_XOR =>
-				temp_result := temp_right xor temp_left;
+				temp_result := temp_reg3 xor temp_reg2;
 			when OP_COPY =>
-				temp_result := temp_left;
+				temp_result := temp_reg2;
 			when OP_COMP =>
-				temp_result := temp_right - temp_left;
+				temp_result := temp_reg3 - temp_reg2;
 				give_result := '0';
 			when OP_BIT =>
-				temp_result := temp_right and temp_left;
+				temp_result := temp_reg3 and temp_reg2;
 				give_result := '0';
 			when OP_MULU =>
-				TEMP_RESULT := '0' & STD_LOGIC_VECTOR(unsigned(temp_right (15 downto 0)) * unsigned(temp_left (15 downto 0)));
+				TEMP_RESULT := '0' & STD_LOGIC_VECTOR(unsigned(temp_reg3 (15 downto 0)) * unsigned(temp_reg2 (15 downto 0)));
 			when OP_MULS =>
-				TEMP_RESULT := '0' & STD_LOGIC_VECTOR(signed(temp_right (15 downto 0)) * signed(temp_left (15 downto 0)));
+				TEMP_RESULT := '0' & STD_LOGIC_VECTOR(signed(temp_reg3 (15 downto 0)) * signed(temp_reg2 (15 downto 0)));
 
 			when OP_INC =>
-				temp_result := temp_right + 1;
+				temp_result := temp_reg3 + 1;
 			when OP_DEC =>
-				temp_result := temp_right - 1;
+				temp_result := temp_reg3 - 1;
 			when OP_NOT =>
-				temp_result := not ('1' & temp_right (31 downto 0));
+				temp_result := not ('1' & temp_reg3 (31 downto 0));
 			when OP_LOGIC_LEFT =>
-				temp_result := temp_right (31 downto 0) & '0';
+				temp_result := temp_reg3 (31 downto 0) & '0';
 			when OP_LOGIC_RIGHT =>
-				temp_result := temp_right (0) & '0' & temp_right (31 downto 1);
+				temp_result := temp_reg3 (0) & '0' & temp_reg3 (31 downto 1);
 			when OP_ARITH_LEFT =>
-				temp_result := temp_right (31 downto 0) & '0';
+				temp_result := temp_reg3 (31 downto 0) & '0';
 			when OP_ARITH_RIGHT =>
-				temp_result := temp_right (0) & temp_right (31) & temp_right (31 downto 1);
+				temp_result := temp_reg3 (0) & temp_reg3 (31) & temp_reg3 (31 downto 1);
 			when OP_NEG =>
-				temp_result := not temp_right + 1;
+				temp_result := not temp_reg3 + 1;
 			when OP_SWAP =>
-				temp_result := '0' & temp_right (15 downto 0) & temp_right (31 downto 16);
+				temp_result := '0' & temp_reg3 (15 downto 0) & temp_reg3 (31 downto 16);
 			when OP_TEST =>
-				temp_result := temp_right;
+				temp_result := temp_reg3;
 				give_result := '0';
 
 			when others =>
@@ -117,7 +117,7 @@ begin
 		if (GIVE_RESULT = '1') then
 			result <= temp_result (31 downto 0);
 		else
-			result <= right;
+			result <= reg3;
 		end if;
 
 		carry_out <= temp_result (32);
@@ -133,21 +133,21 @@ begin
 		-- When adding then if sign of result is different to the sign of both the
 		-- operands then it is an overflow condition
 		if (OP = OP_ADD or OP = OP_ADDC) then
-			if (temp_left (31) /= temp_result (31) and temp_right (31) /= temp_result (31)) then
+			if (temp_reg2 (31) /= temp_result (31) and temp_reg3 (31) /= temp_result (31)) then
 				over_out <= '1';
 			else
 				over_out <= '0';
 			end if;
-		-- Likewise for sub, but invert the left sign for test as its a subtract
+		-- Likewise for sub, but invert the reg2 sign for test as its a subtract
 		elsif (OP = OP_SUB or OP = OP_SUBC) then
-			if (temp_left (31) = temp_result (31) and temp_right (31) /= temp_result (31)) then
+			if (temp_reg2 (31) = temp_result (31) and temp_reg3 (31) /= temp_result (31)) then
 				over_out <= '1';
 			else
 				over_out <= '0';
 			end if;
-		-- For arith shift left, if the sign changed then it is an overflow
+		-- For arith shift reg2, if the sign changed then it is an overflow
 		elsif (OP = OP_ARITH_LEFT) then
-			if (temp_right (31) /= temp_result (31)) then
+			if (temp_reg3 (31) /= temp_result (31)) then
 				over_out <= '1';
 			else
 				over_out <= '0';

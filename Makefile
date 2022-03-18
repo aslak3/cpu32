@@ -1,6 +1,6 @@
 VCOMFLAGS = -2008
 
-all: registers alu businterface #clockdiv control cpu
+all: registers alu businterface control #clockdiv cpu
 
 #clockdiv:
 #	vcom $(VCOMFLAGS) clockdiv.vhd
@@ -8,8 +8,8 @@ registers:
 	vcom $(VCOMFLAGS) registers.vhd tb/registers_tb.vhd
 alu:
 	vcom $(VCOMFLAGS) alu.vhd tb/alu_tb.vhd
-#control:
-#	vcom $(VCOMFLAGS) control.vhd
+control:
+	vcom $(VCOMFLAGS) control.vhd
 businterface:
 	vcom $(VCOMFLAGS) businterface.vhd tb/businterface_tb.vhd
 #cpu:

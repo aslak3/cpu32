@@ -13,7 +13,7 @@ This is of course a work in progress.
 * 32 bit Program Counter
 * Load an immediate 32 bit quantity at the following address
 * Load the upper or lower 16 bit portion in one instruction word
-* Load and store instructions operate either through a register, an immediate address or a register with an immediate displacement, or the program counter with an immediate displacement
+* Load and store instructions operate either through a register, an immediate address or a register with an immediate displacement, or the program counter with an immediate displacement. Immediate displacements may either be a following long or an integrated byte.
 * Clear instruction
 * Simple status bits: zero, negative, carry and overflow
 * ALU operations including
@@ -25,13 +25,21 @@ This is of course a work in progress.
 * Nop and Halt instructions
 * Stacking: call/return
   - conditional using the same mechanism as branching, eg callbranchz subroutine
-* Stacking: push and pop multiple registers eg: push r0,r1+r3+r5 - push r1, r3 and r5 onto r0.
+* Stacking: psuh and pop a single register, push and pop multiple registers eg: push r0,r1+r3+r5 - push r1, r3 and r5 onto r0.
 * No microcode: a coded state machine is used
 * CustomASM (https://github.com/hlorenzi/customasm) is the current assembler
 
+# Started
+
+* Register File, Program Counter, Instruction Register
+* ALU
+* Bus Interface
+* Control Unit (no testbench as yet)
+
 # TODO
 
-* Everything.
+* DataPath and external entity
+* Simulation environment
 
 # Instruction formats
 
@@ -63,16 +71,17 @@ This is of course a work in progress.
 
 * 31 downto 24 : opcode (ALUM, ALUMI, ALUMQ, ALUS)
 * 23 downto 20 : destination register
-* 19 downto 16 : operand register1
-* 15 downto 12 : operand register2 (ALUM only)
+* 19 downto 16 : operand register2
+* 15 downto 12 : operand register3 (ALUM only)
 * 11 downto 8 : operation code
 * 7 downto 0 : quick immediate value (ALUMQ only)
 
-## Push and Pop Multiple
+## Push and Pop including Multiple
 
-* 31 downto 24 : opcode (PUSH, POP)
+* 31 downto 24 : opcode (PUSH, POP, PUSHMULTI, POPMULTI)
+* 23 downto 20 : what to push/pop (PUSH, POP)
 * 23 downto 20 : stack register
-* 15 downto 0 : register mask
+* 15 downto 0 : register mask (PUSHMULTI, POPMULTI)
 
 # Opcode details
 
@@ -156,7 +165,7 @@ This is of course a work in progress.
 <td>rN := (PC + Memory displacement)</td>
 </tr>
 <tr>
-<td>0x0c</td>
+<td>0x0b</td>
 <td>STOREPCD</td>
 <td>Memory dispalcement</td>
 <td>(PC + Memory displacement) := rN</td>

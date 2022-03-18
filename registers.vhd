@@ -24,13 +24,15 @@ entity registers is
 		write : in STD_LOGIC;
 		inc : in STD_LOGIC;
 		dec : in STD_LOGIC;
-		read_left_index : in T_REG_INDEX;
-		read_right_index : in T_REG_INDEX;
+		read_reg1_index : in T_REG_INDEX;
+		read_reg2_index : in T_REG_INDEX;
+		read_reg3_index : in T_REG_INDEX;
 		write_index : in T_REG_INDEX;
 		incdec_index : in T_REG_INDEX;
 		input : in T_REG;
-		left_output : out T_REG;
-		right_output : out T_REG
+		reg1_output : out T_REG;
+		reg2_output : out T_REG;
+		reg3_output : out T_REG
 	);
 end entity;
 
@@ -69,8 +71,9 @@ begin
 		end if;
 	end process;
 
-	left_output <= registers (to_integer(unsigned(read_left_index)));
-	right_output <= registers (to_integer(unsigned(read_right_index)));
+	reg1_output <= registers (to_integer(unsigned(read_reg1_index)));
+	reg2_output <= registers (to_integer(unsigned(read_reg2_index)));
+	reg3_output <= registers (to_integer(unsigned(read_reg3_index)));
 
 end architecture;
 
@@ -157,45 +160,62 @@ end architecture;
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use work.P_REGS.all;
---use work.P_CONTROL.all;
---use work.P_ALU.all;
+use work.P_CONTROL.all;
+use work.P_ALU.all;
+use work.P_BUSINTERFACE.all;
 
 entity instruction is
 	port (
-		instruction : in T_REG;
---		opcode : out T_OPCODE;
+		reset : in STD_LOGIC;
+		clock : in STD_LOGIC;
+		write : in STD_LOGIC;
+		input : in T_REG;
+		opcode : out T_OPCODE;
 		immediate_word : out STD_LOGIC_VECTOR (15 downto 0);
-		address_index : out T_REG_INDEX;
---		transfer_type : out T_TRANSFER_TYPE;
---		flow_cares : out T_FLOWTYPE;
---		flow_polarity : out T_FLOWTYPE;
-		destination_index : out T_REG_INDEX;
-		left_index : out T_REG_INDEX;
-		right_index : out T_REG_INDEX;
+		immediate_byte : out STD_LOGIC_VECTOR (7 downto 0);
+		reg1_index : out T_REG_INDEX;
+		reg2_index : out T_REG_INDEX;
+		reg3_index : out T_REG_INDEX;
+		cycle_width : out T_CYCLE_WIDTH;
+		cycle_signed : out STD_LOGIC;
+		flow_cares : out T_FLOWTYPE;
+		flow_polarity : out T_FLOWTYPE;
 		alu_op : out STD_LOGIC_VECTOR (3 downto 0);
-		alu_immediate : out STD_LOGIC_VECTOR (7 downto 0);
-		register_mask : out STD_LOGIC_VECTOR (15 downto 0)
+		alu_immediate : out STD_LOGIC_VECTOR (7 downto 0)
 	);
 end entity;
 
 architecture behavioral of instruction is
+	signal instruction : T_REG := DEFAULT_REG;
 begin
---	opcode <= instruction (31 downto 24);
+	process (reset, clock)
+	begin
+		if (reset = '1') then
+			instruction <= DEFAULT_REG;
+		elsif (clock'event and clock = '1') then
+			if (write = '1') then
+--pragma synthesis_off
+				report "instruction: writing " & to_hstring(input);
+--pragma synthesis_on
+				instruction <= input;
+			end if;
+		end if;
+	end process;
 
-	destination_index <= instruction (19 downto 16);
+	-- shared
+	opcode <= instruction (31 downto 24);
+	reg1_index <= instruction (23 downto 20);
+	reg2_index <= instruction (19 downto 16);
+	reg3_index <= instruction (15 downto 12);
 	immediate_word <= instruction (15 downto 0);
+	immediate_byte <= instruction (7 downto 0);
 
-	address_index <= instruction (23 downto 20);
---	transfer_type <= instruction (15 downto 13);
+	cycle_width <= instruction (15 downto 14);
+	cycle_signed <= instruction (13);
 
---	flow_cares <= instruction (15 downto 12);
---	flow_polarity <= instruction (11 downto 8);
+	flow_cares <= instruction (15 downto 12);
+	flow_polarity <= instruction (11 downto 8);
 
-	destination_index <= instruction (23 downto 20);
-	left_index <= instruction (19 downto 16);
-	right_index <= instruction (15 downto 12);
 	alu_op <= instruction (11 downto 8);
 	alu_immediate <= instruction (7 downto 0);
-
-	register_mask <= instruction (15 downto 0);
 end architecture;

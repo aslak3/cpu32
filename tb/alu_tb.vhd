@@ -9,7 +9,7 @@ end entity;
 
 architecture behavioral of alu_tb is
 	signal alu_op : T_ALU_OP;
-	signal alu_left, alu_right : STD_LOGIC_VECTOR (31 downto 0);  -- inputs
+	signal alu_reg2, alu_reg3 : STD_LOGIC_VECTOR (31 downto 0);  -- inputs
 	signal alu_carry_in : STD_LOGIC;
 	signal alu_result : STD_LOGIC_VECTOR (31 downto 0);  -- outputs
 	signal alu_carry_out : STD_LOGIC;
@@ -20,8 +20,8 @@ architecture behavioral of alu_tb is
 begin
 	dut: entity work.alu port map (
 		op => alu_op,
-		left => alu_left,
-		right => alu_right,
+		reg2 => alu_reg2,
+		reg3 => alu_reg3,
 		carry_in => alu_carry_in,
 		result => alu_result,
 		carry_out => alu_carry_out,
@@ -33,8 +33,8 @@ begin
 	process
 		procedure run_test (
 			op : T_ALU_OP;
-			left : STD_LOGIC_VECTOR (31 downto 0);
-			right : STD_LOGIC_VECTOR (31 downto 0);
+			reg2 : STD_LOGIC_VECTOR (31 downto 0);
+			reg3 : STD_LOGIC_VECTOR (31 downto 0);
 			carry_in : STD_LOGIC;
 			exp_result : STD_LOGIC_VECTOR (31 downto 0);
 			exp_carry : STD_LOGIC;
@@ -43,12 +43,12 @@ begin
 			exp_over : STD_LOGIC
 			) is
 		begin
-			report "op=" & to_string(op) & " left=" & to_hstring(left) &
-				" right=" & to_hstring(right) & " carry=" & to_string(carry_in);
+			report "op=" & to_string(op) & " reg2=" & to_hstring(reg2) &
+				" reg3=" & to_hstring(reg3) & " carry=" & to_string(carry_in);
 
 			alu_op <= op;
-			alu_left <= left;
-			alu_right <= right;
+			alu_reg2 <= reg2;
+			alu_reg3 <= reg3;
 			alu_carry_in <= carry_in;
 
 			wait for 1 ns;
@@ -121,7 +121,7 @@ begin
 
 		run_test(op_mulu,			x"00000004", x"00001000", '0', 	x"00004000", '0', '0', '0', '0'); -- 4 * 16 = 65025
 		run_test(op_mulu,			x"0000ffff", x"00000000", '0', 	x"00000000", '0', '1', '0', '0'); -- 255 * 0= = 0
-		run_test(op_mulu,			x"00000000", x"00000001", '0', 	x"00000000", '0', '1', '0', '0'); -- left truncated
+		run_test(op_mulu,			x"00000000", x"00000001", '0', 	x"00000000", '0', '1', '0', '0'); -- reg2 truncated
 		run_test(op_mulu,			x"0000ffff", x"0000ffff", '0', 	x"fffe0001", '0', '0', '1', '0'); -- 255 * 255 = 65025
 
 		run_test(op_muls,			x"0000ffff", x"00000001", '0', 	x"ffffffff", '0', '0', '1', '0'); -- -1 * 1 = -1
