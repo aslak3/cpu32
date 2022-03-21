@@ -78,9 +78,9 @@
 
 	load.l {dst:reg}, #{value} =>
 		0x10 @ dst[3:0] @ 0x0 @ 0x0000 @ value[31:0]
-	loadq.u {dst:reg}, #{value} =>
+	loadq.uw {dst:reg}, #{value} =>
 		0x11 @ dst[3:0] @ 0x0 @ value[15:0]
-	loadq.l {dst:reg}, #{value} =>
+	loadq.lw {dst:reg}, #{value} =>
 		0x12 @ dst[3:0] @ 0x0 @ value[15:0]
 	clear {dst:reg}, #{value} =>
 		0x13 @ dst[3:0] @ 0x0 @ 0x0000

@@ -38,7 +38,7 @@ sub printlong
 {
 	my ($long) = @_;
 	print "\t\tx\"" . $long . "\"";
-	if ($offset != 222) {
+	if ($offset != 255) {
 		print ",";
 	}
 	print "\n";

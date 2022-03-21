@@ -198,7 +198,7 @@ begin
 		read_reg1_index => regs_read_reg1_index,
 		read_reg2_index => instruction_reg2_index,
 		read_reg3_index => instruction_reg3_index,
-		write_index => instruction_reg3_index,
+		write_index => regs_write_index,
 		incdec_index => instruction_reg2_index,
 		reg1_output => regs_reg1_output,
 		reg2_output => regs_reg2_output,

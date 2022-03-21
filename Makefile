@@ -16,7 +16,7 @@ control:
 businterface:
 	ghdl -a $(GHDL_FLAGS) businterface.vhd tb/businterface_tb.vhd
 cpu32:
-	ghdl -a $(GHDL_FLAGS) cpu32.vhd tb/intram.vhd #tb/cpu_tb.vhd
+	ghdl -a $(GHDL_FLAGS) cpu32.vhd tb/p_ram_data.vhd tb/intram.vhd tb/cpu32_tb.vhd
 
 tests: registers_tests programcounter_tests temporary_tests alu_tests businterface_tests #cpu_tests
 
@@ -35,6 +35,6 @@ alu_tests:
 businterface_tests:
 	ghdl -e $(GHDL_FLAGS) businterface_tb
 	ghdl -r $(GHDL_FLAGS) businterface_tb
-cpu_tests:
-	ghdl -e $(GHDL_FLAGS) businterface_tb
-	ghdl -r $(GHDL_FLAGS) cpu_tb
+cpu32_tests:
+	ghdl -e $(GHDL_FLAGS) cpu32_tb
+	ghdl -r $(GHDL_FLAGS) cpu32_tb
