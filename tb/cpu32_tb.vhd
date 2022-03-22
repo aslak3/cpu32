@@ -5,6 +5,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use STD.TEXTIO.all;
 use IEEE.STD_LOGIC_TEXTIO.all;
 use work.P_CONTROL.all;
+use work.P_INTRAM.all;
 
 entity cpu32_tb is
 end entity;
@@ -88,9 +89,9 @@ begin
 
 	process (read, write)
 	begin
-		report "address=" & to_hstring(address & '0') & " read=" & STD_LOGIC'Image(read) &
-		" write=" & STD_LOGIC'Image(write) & " DATA_IN=" & to_hstring(data_in) &
-		" data_out=" & to_hstring(data_out);
+		report "address=" & to_hstring(address & "00") & " read=" & STD_LOGIC'Image(read) &
+		" write=" & STD_LOGIC'Image(write) & " data_in=" & to_hstring(data_in) &
+		" data_out=" & to_hstring(data_out) & " data_strobes=" & to_string(data_strobes);
 	end process;
 
 	process
@@ -102,7 +103,6 @@ begin
 
 		variable my_line : LINE;  -- type 'line' comes from textio
 	begin
-
 		reset <= '1';
 		wait for 1 us;
 		reset <= '0';
@@ -118,6 +118,8 @@ begin
 				exit;
 			end if;
 		end loop;
+
+		dump_ram_data;
 
 		std.env.finish;
 	end process;

@@ -29,8 +29,8 @@
 }
 #subruledef storetype
 {
-	w => 0b000
-	b => 0b010
+	b => 0b000
+	w => 0b010
 	l => 0b100
 }
 #subruledef condition
@@ -72,7 +72,7 @@
 }
 
 #ruledef
-	{
+{
 	nop => 0x00 @ 0x000000
 	halt => 0x01 @ 0x000000
 
@@ -86,38 +86,38 @@
 		0x13 @ dst[3:0] @ 0x0 @ 0x0000
 
 	load.{width:loadtype} {dst:reg}, ({src:reg}) =>
-		0x20 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x00
-	store.{width:loadtype} ({dst:reg}), {src:reg} =>
+		0x20 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00
+	store.{width:storetype} ({dst:reg}), {src:reg} =>
 		0x21 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x00
 	load.{width:loadtype} {dst:reg}, {addr} =>
-		0x22 @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x00 @ addr[31:0]
-	store.{width:loadtype} {ddr}, {src:reg} =>
-		0x23 @ src[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x00 @ addr[31:0]
-	load.{width:loadtype} {dst:reg}, ({offset},{src:reg}) =>
-		0x24 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x00 @ offset[31:0]
-	store.{width:loadtype} ({offset},{dst:reg}), {src:reg} =>
-		0x25 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x00 @ offset[31:0]
+		0x22 @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ addr[31:0]
+	store.{width:storetype} {addr}, {src:reg} =>
+		0x23 @ src[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ addr[31:0]
+	load.{width:loadtype} {dst:reg}, ({offset}, {src:reg}) =>
+		0x24 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
+	store.{width:storetype} ({offset}, {dst:reg}), {src:reg} =>
+		0x25 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
 	loadq.{width:loadtype} {dst:reg}, ({offset},{src:reg}) =>
-		0x26 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ offset[7:0]
-	storeq.{width:loadtype} ({offset},{dst:reg}), {src:reg} =>
-		0x27 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ offset[7:0]
-	load.{width:loadtype} {dst:reg}, ({offset},pc) =>
-		0x28 @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x00 @ offset[31:0]
-	store.{width:loadtype} ({offset},pc), {src:reg} =>
-		0x29 @ src[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x00 @ offset[31:0]
-	loadq.{width:loadtype} {dst:reg}, ({offset},pc) =>
-		0x2a @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ offset[7:0]
-	storeq.{width:loadtype} ({offset},pc), {src:reg} =>
-		0x2b @ src[3:0] @ 0x0 @ width[2:0] @ 0b0 @ offset[7:0]
+		0x26 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
+	storeq.{width:storetype} ({offset}, {dst:reg}), {src:reg} =>
+		0x27 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
+	load.{width:loadtype} {dst:reg}, ({offset}, pc) =>
+		0x28 @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
+	store.{width:storetype} ({offset}, pc), {src:reg} =>
+		0x29 @ src[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
+	loadq.{width:loadtype} {dst:reg}, ({offset}, pc) =>
+		0x2a @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
+	storeq.{width:storetype} ({offset}, pc), {src:reg} =>
+		0x2b @ src[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
 
 	jump {target} =>
 		0x30 @ 0x0 @ 0x0 @ 0x00 @ 0x00 @ target[31:0]
 	branch {target} =>
 		0x31 @ 0x0 @ 0x0 @ 0x00 @ 0x00 @ { target - pc - 4}[31:0]
 	jump{test:condition} {target} =>
-		0x30 @ 0x0 @ 0x0 @ test[3:0] @ 0x00 @ target[31:0]
+		0x30 @ 0x0 @ 0x0 @ test[7:0] @ 0x00 @ target[31:0]
 	branch{test:condition} {target} =>
-		0x31 @ 0x0 @ 0x0 @ test[3:0] @ 0x00 @ { target - pc - 4}[31:0]
+		0x31 @ 0x0 @ 0x0 @ test[7:0] @ 0x00 @ { target - pc - 4}[31:0]
 	; 0xf - use r15
 	calljump {target} =>
 		0x32 @ 0x0 @ 0xf @ 0x00 @ target[31:0]
@@ -128,9 +128,9 @@
 	calljump ({dst:reg}) =>
 		0x35 @ dst[3:0] @ 0xf @ 0x00 @ 0x00
 	jump{test:condition} ({dst:reg}) =>
-		0x34 @ dst[3:0] @ 0x0 @ test[3:0] @ 0x00
+		0x34 @ dst[3:0] @ 0x0 @ test[7:0] @ 0x00
 	calljump{test:condition} ({dst:reg}) =>
-		0x35 @ dst[3:0] @ 0xf @ test[3:0] @ 0x00
+		0x35 @ dst[3:0] @ 0xf @ test[7:0] @ 0x00
 	return =>
 		0x36 @ 0x0 @ 0xf @ 0x00 @ 0x00
 

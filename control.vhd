@@ -94,7 +94,7 @@ architecture behavioural of control is
 
 	-- Flow control:
 	-- 31 downto 24 : opcode (BRANCH, JUMP, CALLBRANCH, CALLJUMP, JUMPR, CALLJUMPR, RETURN)
-	-- 23 downto 20 : target register (for JUMPR,
+	-- 23 downto 20 : target register (for JUMPR)
 	-- 19 downto 16 : stack register (for CALLBRANCH, CALLJUMP, RETURN, CALLJUMPR)
 	-- 15 downto 12 : flag mask (not RETURN)
 	-- 11 downto 8 : flag match (not RETURN)
@@ -364,7 +364,9 @@ begin
 								end if;
 							else
 								report "Control: Jump/Branch NOT taken";
-								pc_increment <= '1';
+								if (not (instruction_opcode = OPCODE_JUMPR or instruction_opcode = OPCODE_CALLJUMPR)) then
+									pc_increment <= '1';
+								end if;
 								state := S_FETCH1;
 							end if;
 
@@ -377,7 +379,7 @@ begin
 							pc_jump <= '1';
 							state := S_FETCH1;
 							
-						when OPCODE_ALUM | OPCODE_ALUS | OPCODE_ALUMI =>
+						when OPCODE_ALUM | OPCODE_ALUS | OPCODE_ALUMI | OPCODE_ALUMQ =>
 							alu_reg2_mux_sel <= S_INSTRUCTION_REG2;
 							if (instruction_opcode = OPCODE_ALUMI) then
 								report "Control: Opcode ALUMI";
