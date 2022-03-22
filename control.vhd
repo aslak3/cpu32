@@ -159,7 +159,7 @@ begin
 		if (reset = '1') then
 			state := S_START1;
 			halted <= '0';
-		elsif (clock'Event and clock = '1') then
+
 			alu_reg2_mux_sel <= S_INSTRUCTION_REG2;
 			alu_reg3_mux_sel <= S_INSTRUCTION_REG3;
 			alu_op_mux_sel <= S_INSTRUCTION_ALU_OP;
@@ -170,7 +170,7 @@ begin
 			temporary_input_mux_sel <= S_ALU_RESULT;
 			address_mux_sel <= S_PC;
 			data_out_mux_sel <= S_PC;
-
+		elsif (clock'Event and clock = '1') then
 			alu_carry_in <= '0';
 			cycle_width <= CW_LONG;
 			cycle_signed <= '0';
@@ -185,7 +185,7 @@ begin
 			regs_inc <= '0';
 			regs_dec <= '0';
 			temporary_write <= '0';
-			
+
 			stack_multi_reg_index <= (others => '0');
 
 			case state is
@@ -204,7 +204,7 @@ begin
 					pc_increment <= '1';
 					instruction_write <= '1';
 					state := S_FETCH2;
-					
+
 				when S_FETCH2 =>
 					report "in S_FETCH2";
 					state := S_DECODE;
@@ -264,7 +264,7 @@ begin
 							write <= '1';
 							cycle_width <= instruction_cycle_width;
 							state := S_FETCH1;
-							
+
 						when OPCODE_LOADM =>
 							report "Control: Opcode LOADM";
 							address_mux_sel <= S_PC;
@@ -281,7 +281,7 @@ begin
 							temporary_write <= '1';
 							state := S_STOREM1;
 
-						when OPCODE_LOADRD | OPCODE_STORERD | OPCODE_LOADPCD | OPCODE_STOREPCD | 
+						when OPCODE_LOADRD | OPCODE_STORERD | OPCODE_LOADPCD | OPCODE_STOREPCD |
 							OPCODE_LOADRDQ | OPCODE_STORERDQ | OPCODE_LOADPCDQ | OPCODE_STOREPCDQ
 						=>
 							report "Control: Opcode LOADRD/STORERD/LOADPCD/STOREPCD/LOADRDQ/STORERDQ/LOADPCDQ/STOREPCDQ";
@@ -308,7 +308,7 @@ begin
 							alu_op_mux_sel <= S_ADD;
 							temporary_input_mux_sel <= S_ALU_RESULT;
 							temporary_write <= '1';
-							if (instruction_opcode = OPCODE_LOADRD or instruction_opcode = OPCODE_LOADPCD or 
+							if (instruction_opcode = OPCODE_LOADRD or instruction_opcode = OPCODE_LOADPCD or
 								instruction_opcode = OPCODE_LOADPCD or instruction_opcode = OPCODE_LOADPCD)
 							then
 								-- Loading
@@ -342,6 +342,7 @@ begin
 									pc_jump <= '1';
 									state := S_FETCH1;
 								elsif (instruction_opcode = OPCODE_JUMPR) then
+									report "Control: Jump through reg taken";
 									pc_input_mux_sel <= S_INSTRUCTION_REG1;
 									pc_jump <= '1';
 									state := S_FETCH1;
@@ -378,7 +379,7 @@ begin
 							pc_input_mux_sel <= S_DATA_IN;
 							pc_jump <= '1';
 							state := S_FETCH1;
-							
+
 						when OPCODE_ALUM | OPCODE_ALUS | OPCODE_ALUMI | OPCODE_ALUMQ =>
 							alu_reg2_mux_sel <= S_INSTRUCTION_REG2;
 							if (instruction_opcode = OPCODE_ALUMI) then
@@ -475,14 +476,6 @@ begin
 						pc_increment <= '1';
 					end if;
 					state := S_FETCH1;
-					
-				when S_ALU1 =>
-					last_alu_carry_out := alu_carry_out;
-					last_alu_zero_out := alu_zero_out;
-					last_alu_neg_out := alu_neg_out;
-					last_alu_over_out := alu_over_out;
-					alu_carry_in <= alu_carry_out;
-					state := S_FETCH1;
 
 				when S_BRANCH1 =>
 					pc_input_mux_sel <= S_TEMPORARY_OUTPUT;
@@ -495,18 +488,27 @@ begin
 
 				when S_CALL2 =>
 					address_mux_sel <= S_PC;
-					read <= '1';
 					if (instruction_opcode = OPCODE_CALLJUMP) then
-						pc_input_mux_sel <= S_DATA_IN;		
+						read <= '1';
+						pc_input_mux_sel <= S_DATA_IN;
 					elsif (instruction_opcode = OPCODE_CALLJUMPR) then
 						pc_input_mux_sel <= S_INSTRUCTION_REG1;
 					else
+						read <= '1';
 						alu_reg2_mux_sel <= S_PC;
 						alu_reg3_mux_sel <= S_DATA_IN;
 						alu_op_mux_sel <= S_ADD;
 						pc_input_mux_sel <= S_ALU_RESULT;
 					end if;
 					pc_jump <= '1';
+					state := S_FETCH1;
+
+				when S_ALU1 =>
+					last_alu_carry_out := alu_carry_out;
+					last_alu_zero_out := alu_zero_out;
+					last_alu_neg_out := alu_neg_out;
+					last_alu_over_out := alu_over_out;
+					alu_carry_in <= alu_carry_out;
 					state := S_FETCH1;
 
 				when S_PUSH1 =>
