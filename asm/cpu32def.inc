@@ -120,9 +120,9 @@
 		0x31 @ 0x0 @ 0x0 @ test[7:0] @ 0x00 @ { target - pc - 4}[31:0]
 	; 0xf - use r15
 	calljump {target} =>
-		0x32 @ 0x0 @ 0xf @ 0x00 @ target[31:0]
+		0x32 @ 0x0 @ 0xf @ 0x00 @0x00 @ target[31:0]
 	callbranch {target} =>
-		0x33 @ 0x0 @ 0xf @ 0x00 @ { target - pc - 4 }[31:0]
+		0x33 @ 0x0 @ 0xf @ 0x00 @0x00 @ { target - pc - 4 }[31:0]
 	jump ({dst:reg}) =>
 		0x34 @ dst[3:0] @ 0x0 @ 0x00 @ 0x00
 	calljump ({dst:reg}) =>
@@ -144,9 +144,9 @@
 		0x49 @ dst[3:0] @ operand2[3:0] @ 0x0 @ aluop[3:0] @ 0x00
 
 	{aluop:twoargalu} {dst:reg}, {operand3:reg} =>
-		0x40 @ dst[3:0] @ dst @ operand3[3:0] @ aluop[3:0] @ 0x00
+		0x40 @ dst[3:0] @ dst[3:0] @ operand3[3:0] @ aluop[3:0] @ 0x00
 	{aluop:twoargalu} {dst:reg}, #{value} =>
-		0x42 @ dst[3:0] @ dst @ 0x0 @ aluop[3:0] @ 0x00 @ value[31:0]
+		0x42 @ dst[3:0] @ dst[3:0] @ 0x0 @ aluop[3:0] @ 0x00 @ value[31:0]
 	{aluop:twoargalu}q {dst:reg}, #{value} =>
 		0x44 @ dst[3:0] @ dst[3:0] @ 0x0 @ aluop[3:0] @ value[7:0]
 	{aluop:oneargalu} {dst:reg} =>
@@ -155,5 +155,5 @@
 	push ({dst:reg}), {src:reg} =>
 		0x50 @ src[3:0] @ dst[3:0] @ 0x0000
 	pop {dst:reg}, ({src:reg}) =>
-		0x51 @ src[3:0] @ dst[3:0] @ 0x0000
+		0x51 @ dst[3:0] @ src[3:0] @ 0x0000
 }

@@ -319,11 +319,10 @@ begin
 							end if;
 
 						when OPCODE_JUMP | OPCODE_JUMPR | OPCODE_BRANCH | OPCODE_CALLJUMP | OPCODE_CALLJUMPR |
-							OPCODE_CALLBRANCH
+							OPCODE_CALLBRANCH | OPCODE_RETURN
 						=>
-							report "Control: Opcode JUMP/BRANCH/CALLJUMP/CALLBRANCH";
 --pragma synthesis_off
-							report "Control: Jumping/Branching: Cares=" & to_string(instruction_flow_cares) & " Polarity=" & to_string(instruction_flow_polarity);
+							report "Control: Jumping/Branching/Return: Cares=" & to_string(instruction_flow_cares) & " Polarity=" & to_string(instruction_flow_polarity);
 --pragma synthesis_on
 							if (
 								( instruction_flow_cares = "0000" ) or
@@ -356,29 +355,46 @@ begin
 									temporary_input_mux_sel <= S_ALU_RESULT;
 									temporary_write <= '1';
 									state := S_BRANCH1;
-								else
-									-- A call instead of a branch/jump
-									address_mux_sel <= S_INSTRUCTION_REG2;
-									data_out_mux_sel <= S_PC;
-									regs_dec <= '1';
+								elsif (instruction_opcode = OPCODE_CALLJUMP) then
+									report "Control: JumpR taken";
+									address_mux_sel <= S_PC;
+									read <= '1';
+									temporary_input_mux_sel <= S_DATA_IN;
+									temporary_write <= '1';
+									pc_increment <= '1';
 									state := S_CALL1;
+								elsif (instruction_opcode = OPCODE_CALLJUMPR) then
+									report "Control: CallJumpR taken";
+									state := S_CALL1;
+								elsif (instruction_opcode = OPCODE_CALLBRANCH) then
+									report "Control: CallBranch taken";
+									address_mux_sel <= S_PC;
+									read <= '1';
+									alu_reg2_mux_sel <= S_PC;
+									alu_reg3_mux_sel <= S_DATA_IN;
+									alu_op_mux_sel <= S_ADD;
+									temporary_input_mux_sel <= S_ALU_RESULT;
+									temporary_write <= '1';
+									pc_increment <= '1';
+									state := S_CALL1;
+								elsif (instruction_opcode = OPCODE_RETURN) then
+									report "Control: Return taken";
+									address_mux_sel <= S_INSTRUCTION_REG2;
+									read <= '1';
+									regs_inc <= '1';
+									pc_input_mux_sel <= S_DATA_IN;
+									pc_jump <= '1';
+									state := S_FETCH1;
 								end if;
 							else
-								report "Control: Jump/Branch NOT taken";
-								if (not (instruction_opcode = OPCODE_JUMPR or instruction_opcode = OPCODE_CALLJUMPR)) then
+								report "Control: Jump/Branch/Return NOT taken";
+								if (not (instruction_opcode = OPCODE_JUMPR or instruction_opcode = OPCODE_CALLJUMPR or
+									instruction_opcode = OPCODE_RETURN))
+								then
 									pc_increment <= '1';
 								end if;
 								state := S_FETCH1;
 							end if;
-
-						when OPCODE_RETURN =>
-							report "Control: Opcode RETURN";
-							address_mux_sel <= S_INSTRUCTION_REG2;
-							read <= '1';
-							regs_inc <= '1';
-							pc_input_mux_sel <= S_DATA_IN;
-							pc_jump <= '1';
-							state := S_FETCH1;
 
 						when OPCODE_ALUM | OPCODE_ALUS | OPCODE_ALUMI | OPCODE_ALUMQ =>
 							alu_reg2_mux_sel <= S_INSTRUCTION_REG2;
@@ -483,22 +499,17 @@ begin
 					state := S_FETCH1;
 
 				when S_CALL1 =>
-					write <= '1';
+					address_mux_sel <= S_INSTRUCTION_REG2;
+					data_out_mux_sel <= S_PC;
+					regs_dec <= '1';
 					state := S_CALL2;
 
 				when S_CALL2 =>
-					address_mux_sel <= S_PC;
-					if (instruction_opcode = OPCODE_CALLJUMP) then
-						read <= '1';
-						pc_input_mux_sel <= S_DATA_IN;
-					elsif (instruction_opcode = OPCODE_CALLJUMPR) then
+					write <= '1';
+					if (instruction_opcode = OPCODE_CALLJUMPR) then
 						pc_input_mux_sel <= S_INSTRUCTION_REG1;
 					else
-						read <= '1';
-						alu_reg2_mux_sel <= S_PC;
-						alu_reg3_mux_sel <= S_DATA_IN;
-						alu_op_mux_sel <= S_ADD;
-						pc_input_mux_sel <= S_ALU_RESULT;
+						pc_input_mux_sel <= S_TEMPORARY_OUTPUT;
 					end if;
 					pc_jump <= '1';
 					state := S_FETCH1;
