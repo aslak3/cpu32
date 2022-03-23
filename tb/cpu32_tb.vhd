@@ -89,9 +89,11 @@ begin
 
 	process (read, write)
 	begin
-		report "address=" & to_hstring(address & "00") & " read=" & STD_LOGIC'Image(read) &
-		" write=" & STD_LOGIC'Image(write) & " data_in=" & to_hstring(data_in) &
-		" data_out=" & to_hstring(data_out) & " data_strobes=" & to_string(data_strobes);
+		if (read = '1' or write = '1') then
+		--	report "address=" & to_hstring(address & "00") & " read=" & STD_LOGIC'Image(read) &
+		--		" write=" & STD_LOGIC'Image(write) & " data_in=" & to_hstring(data_in) &
+		--		" data_out=" & to_hstring(data_out) & " data_strobes=" & to_string(data_strobes);
+		end if;
 	end process;
 
 	process
@@ -118,6 +120,10 @@ begin
 				exit;
 			end if;
 		end loop;
+
+		if (halted = '0' and bus_error = '0') then
+			report "Processor terminated due to excessive cycles";
+		end if;
 
 		dump_ram_data;
 

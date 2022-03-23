@@ -60,8 +60,9 @@ end entity;
 architecture behavioural of control is
 	-- Base:
 	-- 31 downto 24 : opcode
-	constant OPCODE_NOP :			T_OPCODE := x"00";
-	constant OPCODE_HALT :			T_OPCODE := x"01";
+	constant OPCODE_ILLEGAL :			T_OPCODE := x"00";
+	constant OPCODE_NOP :			T_OPCODE := x"01";
+	constant OPCODE_HALT :			T_OPCODE := x"02";
 
 	-- Load immediate and clear:
 	-- 31 downto 24 : opcode (LOADLI, LOADUWI, LOADLWI, CLEAR)
@@ -343,6 +344,7 @@ begin
 								elsif (instruction_opcode = OPCODE_JUMPR) then
 									report "Control: Jump through reg taken";
 									pc_input_mux_sel <= S_INSTRUCTION_REG1;
+									regs_read_reg1_index_mux_sel <= S_INSTRUCTION_REG1;
 									pc_jump <= '1';
 									state := S_FETCH1;
 								elsif (instruction_opcode = OPCODE_BRANCH) then
@@ -356,7 +358,7 @@ begin
 									temporary_write <= '1';
 									state := S_BRANCH1;
 								elsif (instruction_opcode = OPCODE_CALLJUMP) then
-									report "Control: JumpR taken";
+									report "Control: Jump taken";
 									address_mux_sel <= S_PC;
 									read <= '1';
 									temporary_input_mux_sel <= S_DATA_IN;
@@ -434,10 +436,12 @@ begin
 							state := S_POP1;
 
 						when OPCODE_PUSHMULTI =>
+							report "Control: Opcode PUSHMULTI";
 							stacked := (others => '0');
 							state := S_PUSHMULTI1;
 
 						when OPCODE_POPMULTI =>
+							report "Control: Opcode POPMULTI";
 							stacked := (others => '0');
 							state := S_POPMULTI1;
 
@@ -478,7 +482,7 @@ begin
 					cycle_signed <= instruction_cycle_signed;
 					regs_input_mux_sel <= S_DATA_IN;
 					regs_write <= '1';
-					if (instruction_opcode = OPCODE_LOADRD) then
+					if (instruction_opcode = OPCODE_LOADRD or instruction_opcode = OPCODE_LOADPCD) then
 						pc_increment <= '1';
 					end if;
 					state := S_FETCH1;
@@ -488,7 +492,7 @@ begin
 					data_out_mux_sel <= S_INSTRUCTION_REG1;
 					write <= '1';
 					cycle_width <= INSTRUCTION_CYCLE_WIDTH;
-					if (instruction_opcode = OPCODE_STORERD) then
+					if (instruction_opcode = OPCODE_STORERD or instruction_opcode = OPCODE_STOREPCD) then
 						pc_increment <= '1';
 					end if;
 					state := S_FETCH1;
@@ -543,7 +547,7 @@ begin
 							stack_multi_reg_index <= STD_LOGIC_VECTOR (to_unsigned(reg_number, 4));
 							-- Mark this register as stacked
 							stacked (reg_number) := '1';
-							regs_read_reg1_index_mux_sel <= S_INSTRUCTION_REG1;
+							regs_read_reg1_index_mux_sel <= S_STACK_MULTI;
 							address_mux_sel <= S_INSTRUCTION_REG2;
 							data_out_mux_sel <= S_INSTRUCTION_REG1;
 							write <= '1';
@@ -551,7 +555,7 @@ begin
 						end if;
 					end loop;
 
-					if (TEMPORARY_OUTPUT (15 downto 0) = STACKED) then
+					if (instruction_imm_word = stacked) then
 						state := S_FETCH1;
 					else
 						state := S_PUSHMULTI1;

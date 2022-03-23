@@ -13,8 +13,8 @@ loop:		store.l (myvar, r0), r0
 			halt
 
 addfour:	addq r0,#4
-			push (r15), r0
-			pop r14, (r15)
+			pushmulti (r15),R0|R1|R15
+			addq r15,#3*4
 			return
 
 myvar:		#d32 0

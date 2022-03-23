@@ -97,10 +97,10 @@ begin
 --pragma synthesis_on
 				pc <= input;
 			elsif (increment = '1') then
---pragma synthesis_off
-				report "PC: incrementing";
---pragma synthesis_on
 				pc <= pc + 4;
+--pragma synthesis_off
+				report "PC: incrementing to " & to_hstring(pc);
+--pragma synthesis_on
 			end if;
 		end if;
 	end process;

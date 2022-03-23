@@ -1,5 +1,23 @@
 #bits 8
 
+R0 =  0b0000000000000001
+R1 =  0b0000000000000010
+R2 =  0b0000000000000100
+R3 =  0b0000000000001000
+R4 =  0b0000000000010000
+R5 =  0b0000000000100000
+R6 =  0b0000000001000000
+R7 =  0b0000000010000000
+R8 =  0b0000000100000000
+R9 =  0b0000001000000000
+R10 = 0b0000010000000000
+R11 = 0b0000100000000000
+R12 = 0b0001000000000000
+R13 = 0b0010000000000000
+R14 = 0b0100000000000000
+R15 = 0b1000000000000000
+
+
 #subruledef reg
 {
 	r0 => 0
@@ -19,6 +37,7 @@
 	r14 => 14
 	r15 => 15
 }
+
 #subruledef loadtype
 {
 	bu => 0b000
@@ -73,8 +92,8 @@
 
 #ruledef
 {
-	nop => 0x00 @ 0x000000
-	halt => 0x01 @ 0x000000
+	nop => 0x01 @ 0x000000
+	halt => 0x02 @ 0x000000
 
 	load.l {dst:reg}, #{value} =>
 		0x10 @ dst[3:0] @ 0x0 @ 0x0000 @ value[31:0]
@@ -82,13 +101,13 @@
 		0x11 @ dst[3:0] @ 0x0 @ value[15:0]
 	loadq.lw {dst:reg}, #{value} =>
 		0x12 @ dst[3:0] @ 0x0 @ value[15:0]
-	clear {dst:reg}, #{value} =>
+	clear {dst:reg} =>
 		0x13 @ dst[3:0] @ 0x0 @ 0x0000
 
 	load.{width:loadtype} {dst:reg}, ({src:reg}) =>
 		0x20 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00
 	store.{width:storetype} ({dst:reg}), {src:reg} =>
-		0x21 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x00
+		0x21 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00
 	load.{width:loadtype} {dst:reg}, {addr} =>
 		0x22 @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ addr[31:0]
 	store.{width:storetype} {addr}, {src:reg} =>
@@ -98,9 +117,9 @@
 	store.{width:storetype} ({offset}, {dst:reg}), {src:reg} =>
 		0x25 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
 	loadq.{width:loadtype} {dst:reg}, ({offset},{src:reg}) =>
-		0x26 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
+		0x26 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[7:0]
 	storeq.{width:storetype} ({offset}, {dst:reg}), {src:reg} =>
-		0x27 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
+		0x27 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[7:0]
 	load.{width:loadtype} {dst:reg}, ({offset}, pc) =>
 		0x28 @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
 	store.{width:storetype} ({offset}, pc), {src:reg} =>
@@ -156,4 +175,8 @@
 		0x50 @ src[3:0] @ dst[3:0] @ 0x0000
 	pop {dst:reg}, ({src:reg}) =>
 		0x51 @ dst[3:0] @ src[3:0] @ 0x0000
+	pushmulti ({dst:reg}), {src:u16} =>
+		0x52 @ 0x0 @ dst[3:0] @ src[15:0]
+	popmulti {dst:u16}, ({src:reg}) =>
+		0x53 @ 0x0 @ src[3:0] @ dst[15:0]
 }
