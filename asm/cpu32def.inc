@@ -140,6 +140,8 @@ R15 = 0b1000000000000000
 	; 0xf - use r15
 	calljump {target} =>
 		0x32 @ 0x0 @ 0xf @ 0x00 @0x00 @ target[31:0]
+	calljump{test:condition} {target} =>
+		0x32 @ 0x0 @ 0xf @ test[7:0] @0x00 @ target[31:0]
 	callbranch {target} =>
 		0x33 @ 0x0 @ 0xf @ 0x00 @0x00 @ { target - pc - 4 }[31:0]
 	jump ({dst:reg}) =>

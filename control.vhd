@@ -423,6 +423,7 @@ begin
 							report "Control: Opcode PUSH";
 							address_mux_sel <= S_INSTRUCTION_REG2;
 							data_out_mux_sel <= S_INSTRUCTION_REG1;
+							regs_read_reg1_index_mux_sel <= S_INSTRUCTION_REG1;
 							regs_dec <= '1';
 							state := S_PUSH1;
 
@@ -470,6 +471,7 @@ begin
 				when S_STOREM1 =>
 					address_mux_sel <= S_TEMPORARY_OUTPUT;
 					data_out_mux_sel <= S_INSTRUCTION_REG1;
+					regs_read_reg1_index_mux_sel <= S_INSTRUCTION_REG1;
 					write <= '1';
 					cycle_width <= INSTRUCTION_CYCLE_WIDTH;
 					pc_increment <= '1';
@@ -489,6 +491,7 @@ begin
 
 				when S_STORERD1 =>
 					address_mux_sel <= S_TEMPORARY_OUTPUT;
+					regs_read_reg1_index_mux_sel <= S_INSTRUCTION_REG1;
 					data_out_mux_sel <= S_INSTRUCTION_REG1;
 					write <= '1';
 					cycle_width <= INSTRUCTION_CYCLE_WIDTH;

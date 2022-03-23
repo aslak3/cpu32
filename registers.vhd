@@ -99,7 +99,7 @@ begin
 			elsif (increment = '1') then
 				pc <= pc + 4;
 --pragma synthesis_off
-				report "PC: incrementing to " & to_hstring(pc);
+				report "PC: incrementing from " & to_hstring(pc);
 --pragma synthesis_on
 			end if;
 		end if;
