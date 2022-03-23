@@ -97,12 +97,10 @@ R15 = 0b1000000000000000
 
 	load.l {dst:reg}, #{value} =>
 		0x10 @ dst[3:0] @ 0x0 @ 0x0000 @ value[31:0]
-	loadq.uw {dst:reg}, #{value} =>
+	loadq.ws {dst:reg}, #{value} =>
 		0x11 @ dst[3:0] @ 0x0 @ value[15:0]
-	loadq.lw {dst:reg}, #{value} =>
-		0x12 @ dst[3:0] @ 0x0 @ value[15:0]
 	clear {dst:reg} =>
-		0x13 @ dst[3:0] @ 0x0 @ 0x0000
+		0x12 @ dst[3:0] @ 0x0 @ 0x0000
 
 	load.{width:loadtype} {dst:reg}, ({src:reg}) =>
 		0x20 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00
@@ -117,9 +115,9 @@ R15 = 0b1000000000000000
 	store.{width:storetype} ({offset}, {dst:reg}), {src:reg} =>
 		0x25 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
 	loadq.{width:loadtype} {dst:reg}, ({offset},{src:reg}) =>
-		0x26 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[7:0]
+		0x26 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
 	storeq.{width:storetype} ({offset}, {dst:reg}), {src:reg} =>
-		0x27 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[7:0]
+		0x27 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
 	load.{width:loadtype} {dst:reg}, ({offset}, pc) =>
 		0x28 @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
 	store.{width:storetype} ({offset}, pc), {src:reg} =>

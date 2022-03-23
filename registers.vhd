@@ -160,8 +160,8 @@ entity instruction is
 		write : in STD_LOGIC;
 		input : in T_REG;
 		opcode : out T_OPCODE;
-		imm_word : out STD_LOGIC_VECTOR (15 downto 0);
-		imm_byte : out STD_LOGIC_VECTOR (7 downto 0);
+		quick_word : out STD_LOGIC_VECTOR (15 downto 0);
+		quick_byte : out STD_LOGIC_VECTOR (7 downto 0);
 		reg1_index : out T_REG_INDEX;
 		reg2_index : out T_REG_INDEX;
 		reg3_index : out T_REG_INDEX;
@@ -195,8 +195,8 @@ begin
 	reg1_index <= instruction_register (23 downto 20);
 	reg2_index <= instruction_register (19 downto 16);
 	reg3_index <= instruction_register (15 downto 12);
-	imm_word <= instruction_register (15 downto 0);
-	imm_byte <= instruction_register (7 downto 0);
+	quick_word <= instruction_register (15 downto 0);
+	quick_byte <= instruction_register (7 downto 0);
 
 	cycle_width <= instruction_register (15 downto 14);
 	cycle_signed <= instruction_register (13);

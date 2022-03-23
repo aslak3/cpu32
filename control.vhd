@@ -36,7 +36,7 @@ entity control is
 		instruction_flow_polarity : in T_FLOWTYPE;
 		instruction_cycle_width : in T_CYCLE_WIDTH;
 		instruction_cycle_signed : in STD_LOGIC;
-		instruction_imm_word : in STD_LOGIC_VECTOR (15 downto 0);
+		instruction_quick_word : in STD_LOGIC_VECTOR (15 downto 0);
 
 		alu_carry_in : out STD_LOGIC;
 		alu_carry_out : in STD_LOGIC;
@@ -69,9 +69,8 @@ architecture behavioural of control is
 	-- 23 downto 20 : left: destination register
 	-- 15 downto 0 : what to load (not CLEAR, LOADLI)
 	constant OPCODE_LOADLI :		T_OPCODE := x"10";
-	constant OPCODE_LOADUWQ :		T_OPCODE := x"11";
-	constant OPCODE_LOADLWQ :		T_OPCODE := x"12";
-	constant OPCODE_CLEAR :			T_OPCODE := x"13";
+	constant OPCODE_LOADWSQ :		T_OPCODE := x"11";
+	constant OPCODE_CLEAR :			T_OPCODE := x"12";
 
 	-- Load and store:
 	-- 31 downto 24 : opcode (LOADR, STORER, LOADM, STORM, LOADRD, STORERD, LOADRDQ, STORERQD, LOADPCD, STOREPCD, LOADPCDQ, STOREPCDQ)
@@ -231,13 +230,9 @@ begin
 							regs_write <= '1';
 							state := S_FETCH1;
 
-						when OPCODE_LOADUWQ | OPCODE_LOADLWQ =>
-							report "Control: Opcode LOADUWQ/LOADLWQ";
-							if (instruction_opcode = OPCODE_LOADUWQ) then
-								regs_input_mux_sel <= S_INSTRUCTION_IMM_WORD_UPPER;
-							else
-								regs_input_mux_sel <= S_INSTRUCTION_IMM_WORD_LOWER;
-							end if;
+						when OPCODE_LOADWSQ =>
+							report "Control: Opcode LOADWSQ";
+							regs_input_mux_sel <= S_INSTRUCTION_QUICK_WORD;
 							regs_write_index_mux_sel <= S_INSTRUCTION_REG1;
 							regs_write <= '1';
 							state := S_FETCH1;
@@ -285,7 +280,7 @@ begin
 						when OPCODE_LOADRD | OPCODE_STORERD | OPCODE_LOADPCD | OPCODE_STOREPCD |
 							OPCODE_LOADRDQ | OPCODE_STORERDQ | OPCODE_LOADPCDQ | OPCODE_STOREPCDQ
 						=>
-							report "Control: Opcode LOADRD/STORERD/LOADPCD/STOREPCD/LOADRDQ/STORERDQ/LOADPCDQ/STOREPCDQ";
+							report "Control: Opcode LOADRD/STORERD/LOADPCD/STOREPCD/LOADQRD/STOREQRD/LOADPCD/STOREQPCD";
 							if (instruction_opcode = OPCODE_LOADRD or instruction_opcode = OPCODE_STORERD or
 								instruction_opcode = OPCODE_LOADPCD or instruction_opcode = OPCODE_STOREPCD)
 							then
@@ -295,7 +290,7 @@ begin
 								read <= '1';
 							else
 								-- Quick
-								alu_reg3_mux_sel <= S_INSTRUCTION_IMM_BYTE;
+								alu_reg3_mux_sel <= S_INSTRUCTION_QUICK_BYTE;
 							end if;
 							if (instruction_opcode = OPCODE_LOADRD or instruction_opcode = OPCODE_STORERD or
 								instruction_opcode = OPCODE_LOADRDQ or instruction_opcode = OPCODE_STORERDQ
@@ -310,7 +305,7 @@ begin
 							temporary_input_mux_sel <= S_ALU_RESULT;
 							temporary_write <= '1';
 							if (instruction_opcode = OPCODE_LOADRD or instruction_opcode = OPCODE_LOADPCD or
-								instruction_opcode = OPCODE_LOADPCD or instruction_opcode = OPCODE_LOADPCD)
+								instruction_opcode = OPCODE_LOADRDQ or instruction_opcode = OPCODE_LOADPCDQ)
 							then
 								-- Loading
 								state := S_LOADRD1;
@@ -407,7 +402,7 @@ begin
 								alu_reg3_mux_sel <= S_DATA_IN;
 							elsif (instruction_opcode = OPCODE_ALUMQ) then
 								report "Control: Opcode ALUMQ";
-								alu_reg3_mux_sel <= S_INSTRUCTION_IMM_BYTE;
+								alu_reg3_mux_sel <= S_INSTRUCTION_QUICK_BYTE;
 							else
 								report "Control: Opcode ALUM/ALUS";
 								alu_reg3_mux_sel <= S_INSTRUCTION_REG3;
@@ -545,7 +540,7 @@ begin
 				when S_PUSHMULTI2 =>
 					-- Second cycle is the actual write
 					for reg_number in 0 to 15 loop
-						if (instruction_imm_word (reg_number) = '1' and stacked (reg_number) = '0') then
+						if (instruction_quick_word (reg_number) = '1' and stacked (reg_number) = '0') then
 							-- Get the first register we have not yet stacked
 							stack_multi_reg_index <= STD_LOGIC_VECTOR (to_unsigned(reg_number, 4));
 							-- Mark this register as stacked
@@ -558,7 +553,7 @@ begin
 						end if;
 					end loop;
 
-					if (instruction_imm_word = stacked) then
+					if (instruction_quick_word = stacked) then
 						state := S_FETCH1;
 					else
 						state := S_PUSHMULTI1;
@@ -566,7 +561,7 @@ begin
 
 				when S_POPMULTI1 =>
 					for reg_number in 15 downto 0 loop
-						if (instruction_imm_word (reg_number) = '1' and stacked (reg_number) = '0') then
+						if (instruction_quick_word (reg_number) = '1' and stacked (reg_number) = '0') then
 							-- Get the first register we haven't yet unstacked. This is done in then
 							-- reverse order to the push operation
 							stack_multi_reg_index <= STD_LOGIC_VECTOR (to_unsigned(reg_number, 4));
@@ -583,7 +578,7 @@ begin
 
 				when S_POPMULTI2 =>
 					regs_inc <= '1';
-					if (instruction_imm_word = stacked) then
+					if (instruction_quick_word = stacked) then
 						state := S_FETCH1;
 					else
 						state := S_POPMULTI1;

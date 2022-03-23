@@ -59,8 +59,8 @@ architecture behavioural of cpu32 is
 	signal instruction_alu_op : T_ALU_OP := (others => '0');
 	signal instruction_flow_cares : T_FLOWTYPE := (others => '0');
 	signal instruction_flow_polarity : T_FLOWTYPE := (others => '0');
-	signal instruction_imm_word : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
-	signal instruction_imm_byte : STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
+	signal instruction_quick_word : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
+	signal instruction_quick_byte : STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
 	signal instruction_cycle_width : T_CYCLE_WIDTH := (others => '0');
 	signal instruction_cycle_signed : STD_LOGIC := '0';
 	signal instruction_reg1_index : T_REG_INDEX := (others => '0');
@@ -134,7 +134,7 @@ begin
 		instruction_flow_polarity => instruction_flow_polarity,
 		instruction_cycle_width => instruction_cycle_width,
 		instruction_cycle_signed => instruction_cycle_signed,
-		instruction_imm_word => instruction_imm_word,
+		instruction_quick_word => instruction_quick_word,
 
 		alu_carry_in => alu_carry_in,
 		alu_carry_out => alu_carry_out,
@@ -164,8 +164,8 @@ begin
 		reg1_index => instruction_reg1_index,
 		reg2_index => instruction_reg2_index,
 		reg3_index => instruction_reg3_index,
-		imm_word => instruction_imm_word,
-		imm_byte => instruction_imm_byte,
+		quick_word => instruction_quick_word,
+		quick_byte => instruction_quick_byte,
 
 		cycle_width => instruction_cycle_width,
 		cycle_signed => instruction_cycle_signed,
@@ -248,7 +248,7 @@ begin
 	cpu_data_in_extended <=
 		(8 to 31 => cpu_data_in (7)) & cpu_data_in (7 downto 0) when
 			(cpu_cycle_width = CW_BYTE and cpu_cycle_signed = '1') else
-		(16 to 31 => cpu_data_in (16)) & cpu_data_in (15 downto 0) when
+		(16 to 31 => cpu_data_in (15)) & cpu_data_in (15 downto 0) when
 			(cpu_cycle_width = CW_WORD and cpu_cycle_signed = '1') else
 		(8 to 31 => '0') & cpu_data_in (7 downto 0) when
 			(cpu_cycle_width = CW_BYTE and cpu_cycle_signed = '0') else
@@ -259,14 +259,13 @@ begin
 	alu_reg2_in <= 		regs_reg2_output when (alu_reg2_mux_sel = S_INSTRUCTION_REG2) else
 						pc_output;
 	alu_reg3_in <=		regs_reg3_output when (alu_reg3_mux_sel = S_INSTRUCTION_REG3) else
-						x"000000" & instruction_imm_byte when (alu_reg3_mux_sel = S_INSTRUCTION_IMM_BYTE) else
+						(8 to 31 => instruction_quick_byte (7)) & instruction_quick_byte when (alu_reg3_mux_sel = S_INSTRUCTION_QUICK_BYTE) else
 						cpu_data_in;
 	alu_op <= 			instruction_alu_op when (alu_op_mux_sel = S_INSTRUCTION_ALU_OP) else
 						OP_ADD;
 	regs_input <= 		alu_result when (regs_input_mux_sel = S_ALU_RESULT) else
 						cpu_data_in_extended when (regs_input_mux_sel = S_DATA_IN) else
-						instruction_imm_word & x"0000" when (regs_input_mux_sel = S_INSTRUCTION_IMM_WORD_UPPER) else
-						x"0000" & instruction_imm_word;
+						(16 to 31 => instruction_quick_word (15)) & instruction_quick_word;
 	regs_write_index <=	instruction_reg1_index when (regs_write_index_mux_sel = S_INSTRUCTION_REG1) else
 						stack_multi_reg_index;
 	regs_read_reg1_index <=
