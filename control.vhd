@@ -60,17 +60,18 @@ end entity;
 architecture behavioural of control is
 	-- Base:
 	-- 31 downto 24 : opcode
-	constant OPCODE_ILLEGAL :			T_OPCODE := x"00";
+	constant OPCODE_ILLEGAL :		T_OPCODE := x"00";
 	constant OPCODE_NOP :			T_OPCODE := x"01";
 	constant OPCODE_HALT :			T_OPCODE := x"02";
+	constant OPCODE_ORFLAGS :		T_OPCODE := x"03";
+	constant OPCODE_ANDFLAGS :		T_OPCODE := x"04";
 
 	-- Load immediate and clear:
-	-- 31 downto 24 : opcode (LOADLI, LOADUWI, LOADLWI, CLEAR)
-	-- 23 downto 20 : left: destination register
-	-- 15 downto 0 : what to load (not CLEAR, LOADLI)
+	-- 31 downto 24 : opcode (LOADLI, LOADUWI, LOADLWI)
+	-- 23 downto 20 : left: destination register (not ORLFAGS, ANDFLAGS)
+	-- 15 downto 0 : what to load (LOADWSQ, ORFLAGS, ANDFLAGS)
 	constant OPCODE_LOADLI :		T_OPCODE := x"10";
 	constant OPCODE_LOADWSQ :		T_OPCODE := x"11";
-	constant OPCODE_CLEAR :			T_OPCODE := x"12";
 
 	-- Load and store:
 	-- 31 downto 24 : opcode (LOADR, STORER, LOADM, STORM, LOADRD, STORERD, LOADRDQ, STORERQD, LOADPCD, STOREPCD, LOADPCDQ, STOREPCDQ)
@@ -233,6 +234,22 @@ begin
 							halted <= '1';
 							state := S_HALT1;
 
+						when OPCODE_ORFLAGS =>
+							report "Control: Opcode ORFLAGS with " & to_string(instruction_quick_word);
+							last_alu_carry_out := last_alu_carry_out or instruction_quick_word (FLOWTYPE_CARRY);
+							last_alu_zero_out := alu_zero_out or instruction_quick_word (FLOWTYPE_ZERO);
+							last_alu_neg_out := alu_neg_out or instruction_quick_word (FLOWTYPE_NEG);
+							last_alu_over_out := alu_over_out or instruction_quick_word (FLOWTYPE_OVER);
+							state := S_FETCH1;
+
+						when OPCODE_ANDFLAGS =>
+							report "Control: Opcode ANDFLAGS with " & to_string(instruction_quick_word);
+							last_alu_carry_out := last_alu_carry_out and instruction_quick_word (FLOWTYPE_CARRY);
+							last_alu_zero_out := alu_zero_out and instruction_quick_word (FLOWTYPE_ZERO);
+							last_alu_neg_out := alu_neg_out and instruction_quick_word (FLOWTYPE_NEG);
+							last_alu_over_out := alu_over_out and instruction_quick_word (FLOWTYPE_OVER);
+							state := S_FETCH1;
+
 						when OPCODE_LOADLI =>
 							report "Control: Opcode LOADLI";
 							address_mux_sel <= S_PC;
@@ -248,11 +265,6 @@ begin
 							regs_input_mux_sel <= S_INSTRUCTION_QUICK_WORD;
 							regs_write_index_mux_sel <= S_INSTRUCTION_REG1;
 							regs_write <= '1';
-							state := S_FETCH1;
-
-						when OPCODE_CLEAR =>
-							report "Control: Opcode CLEAR";
-							regs_clear <= '1';
 							state := S_FETCH1;
 
 						when OPCODE_LOADR =>
@@ -366,7 +378,7 @@ begin
 									temporary_write <= '1';
 									state := S_BRANCH1;
 								elsif (instruction_opcode = OPCODE_CALLJUMP) then
-									report "Control: Jump taken";
+									report "Control: CallJump taken";
 									address_mux_sel <= S_PC;
 									read <= '1';
 									temporary_input_mux_sel <= S_DATA_IN;

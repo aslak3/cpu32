@@ -92,13 +92,17 @@ R15 = 0b1000000000000000
 {
 	nop => 0x01 @ 0x000000
 	halt => 0x02 @ 0x000000
+	orflags #{value} =>
+		0x03 @ 0x00 @ value[15:0]
+	andflags #{value} =>
+		0x04 @ 0x00 @ value[15:0]
 
 	load.l {dst:reg}, #{value} =>
 		0x10 @ dst[3:0] @ 0x0 @ 0x0000 @ value[31:0]
 	loadq.ws {dst:reg}, #{value} =>
 		0x11 @ dst[3:0] @ 0x0 @ value[15:0]
 	clear {dst:reg} =>
-		0x12 @ dst[3:0] @ 0x0 @ 0x0000
+		0x11 @ dst[3:0] @ 0x0 @ 0x0000
 
 	load.{width:loadtype} {dst:reg}, ({src:reg}) =>
 		0x20 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00

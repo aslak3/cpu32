@@ -2,32 +2,57 @@
 
 This is of course a work in progress.
 
-# Summary of planned features
+# Rationale/Motivation
+
+I had a lot of fun working on my 16 bit softcore processor (https://github.com/aslak3/cpu), and thought it would be interesting to extend the design to a 32 bit processor.
+
+* I'm one of those odd programmers who enjoy writing code in assembly. I want to produce an ISA which is pleasent to program in assembly, even if this means it does not perform as well in other envirnoments, such as when it is the target of a C compiler.
+* Carrying on from that, it would be terrific to look at producing an LLVM target for this design. And with that in mind, it should have the necessary ISA features to make running C code reasonably performant.
+* Sitting between RISC and CISC is a nice place to be.
+  * Stack operations with multiple registers in one instruction is not very RISC like at all, and would certainly hinder a future pipelined design. None the less it's a big programmer convience.
+  * On the other hand, being a load/store based processor has obvious benifits.
+* I'm happy to borrow ideas from other designs.
+* An eventual goal is to look at introducing a pipeline, though this may ential a partial or even complete redisgn of the ISA and the design itself.
+  * This project is also a good place to explore my interest in processor design. For instance, it would be interesting to look at switching to a microcoded control unit, just for the experience of doing so.
+* This seems like a nice logic block to use to explore other areas of computer systems design, such as memory controllers for SDRAM etc.
+
+# Summary of features, implemented and planned
+
+## General
 
 * 32 bit address and databuses
-* 32 bit opcodes
-* Long, Word and Byte size memory accesses, with signed/unsigned extension on byte reads
-  - Bus error signal on unaligned word transfers
-* Some opcodes (like LOADI, JUMPs, BRANCHes, ALUMI, CALLs) have one following immediate value/address
+* 32 bit instruction word
 * 16 x 32 bit general purpose registers
 * 32 bit Program Counter
+* No microcode: a coded state machine is used
+* CustomASM (https://github.com/hlorenzi/customasm) is the current assembler
+
+## Memory
+
+* Long, Word and Byte size memory accesses, with signed/unsigned extension on byte  and word reads
+  - Bus error signal on unaligned word transfers
+
+## Instructions
+
+* Some opcodes (like LOADI, JUMPs, BRANCHes, ALUMI, CALLs) have one following immediate value/address
 * Load an immediate 32 bit quantity at the following address
 * Load the lower 16 bit portion in one instruction word, sign extended to 32 bits
 * Load and store instructions operate either through a register, an immediate address or a register with an immediate displacement, or the program counter with an immediate displacement. Immediate displacements may either be a following long or an integrated byte, which is sign extended.
-* Clear instruction
+* Clear instruction as assembler nicety
 * Simple status bits: zero, negative, carry and overflow
 * ALU operations including
-  - add, add with carry, subtract, subtract with carry, signed and unsigned 8 bit to 16 bit multiply, increment, decrement, and, or, xor, not, shift left, shift right, copy, negation, etc
+  - add, add with carry, subtract, subtract with carry, signed and unsigned 8 bit to 16 bit multiply, and, or, xor, not, shift left, shift right, copy, negation, etc
 * ALU operations are of the form DEST <= OPERAND1 op OPERAND2, or DEST <= op OPERAND
   - ALUMI operates with an immediate operand, eg. add r0,r1,#123
-  - ALUMQ operates with an integrated sign exteded byte inside the instruciton word, eg. addq r0,r1,#2
-* Conditional and uncoditional jumps and branches: always, on each flag set or clear with don't cares
+  - ALUMQ operates with an integrated sign exteded byte inside the instruction word, eg. addq r0,r1,#2
+  - Assembler provides shorthand versions, eg: add r0,#123
+* Conditional and uncoditional flow control, including calling subroutines and return: always, on each flag set or clear with don't cares
+* Flags (currently just the four condition codes) can be manually ORed/ANDed
 * Nop and Halt instructions
-* Stacking: call/return
-  - conditional using the same mechanism as branching, eg callbranchz subroutine
-* Stacking: psuh and pop a single register, push and pop multiple registers eg: push r0,r1+r3+r5 - push r1, r3 and r5 onto r0.
-* No microcode: a coded state machine is used
-* CustomASM (https://github.com/hlorenzi/customasm) is the current assembler
+
+## Stack
+
+* Push and pop a single register, push and pop multiple registers eg: push r0,r1+r3+r5 - push r1, r3 and r5 onto r0.
 
 # Started
 
@@ -40,20 +65,23 @@ This is of course a work in progress.
 
 # TODO
 
-* Expose condition code register and allow it to be altered by code/stacked
-* ...
+* Expose condition code register and allow it to be stacked/transferred to a register
 * Test bench for control unit
 * Integration into FPGA environment
+* Interrupts
+* Support for narrower then 32 bit IO/memory ports
+* ...
 
 # Instruction formats
 
 ## Base - Prefix 0x0
 
-* 31 downto 24 : opcode (NOP, HALT)
+* 31 downto 24 : opcode (NOP, HALT, ORFLAGS, ANDFLAGS)
+* 15 downto 0 : what to load (ORFLAGS, ANDFLAGS)
 
-## Load Immedaite Long, Word quick and Clear - Prefix 0x1
+## Load Immedaite Long, Word quick - Prefix 0x1
 
-* 31 downto 24 : opcode (LOADLI, LOADWSQ, CLEAR)
+* 31 downto 24 : opcode (LOADLI, LOADWSQ)
 * 23 downto 20 : destination register
 * 15 downto 0 : what to load (LOADWSQ)
 
@@ -115,6 +143,20 @@ This is of course a work in progress.
 <td>Stops the processor and asserts HALT signal</td>
 </tr>
 <tr>
+<td>0x03</td>
+<td>ORFLAGS</td>
+<td>-</td>
+<td>3</td>
+<td>Flags := Flags OR embedded value</td>
+</tr>
+<tr>
+<td>0x04</td>
+<td>ANDFLAGS</td>
+<td>-</td>
+<td>3</td>
+<td>Flags := Flags AND embedded value</td>
+</tr>
+<tr>
 <td>0x10</td>
 <td>LOADLI</td>
 <td>Long value</td>
@@ -127,13 +169,6 @@ This is of course a work in progress.
 <td>-</td>
 <td>3</td>
 <td>rN := sign extended embedded word</td>
-</tr>
-<td>0x12</td>
-<td>CLEAR</td>
-<td>-</td>
-<td>3</td>
-<td>rN := 0</td>
-</tr>
 <tr>
 <td>0x20</td>
 <td>LOADR</td>
@@ -389,7 +424,7 @@ This is of course a work in progress.
 </tr>
 <tr>
 <td>0b100</td>
-<td>Byte uigned</td>
+<td>Byte unsigned</td>
 </tr>
 <tr>
 <td>0b101</td>
@@ -397,7 +432,7 @@ This is of course a work in progress.
 </tr>
 <tr>
 <td>0b110</td>
-<td>Long signed</td>
+<td>Long</td>
 </tr>
 <tr>
 <td>0b111</td>
@@ -422,7 +457,7 @@ This is of course a work in progress.
 </tr>
 <tr>
 <td>0b0011</td>
-<td>Subtract with cary</td>
+<td>Subtract with borrow</td>
 </tr>
 <tr>
 <td>0b0100</td>
@@ -450,11 +485,11 @@ This is of course a work in progress.
 </tr>
 <tr>
 <td>0b1010</td>
-<td>Unsigned 8 bit to 16 bit multiply</td>
+<td>Unsigned 16 bit to 32 bit multiply</td>
 </tr>
 <tr>
 <td>0b1011</td>
-<td>Signed 8 bit to 16 bit multiply</td>
+<td>Signed 16 bit to 32 bit multiply</td>
 </tr>
 <tr>
 <td>0b1100-0b1111
@@ -475,38 +510,30 @@ This is of course a work in progress.
 </tr>
 <tr>
 <td>0b0010</td>
-<td>Double increment</td>
-</tr>
-<tr>
-<td>0b0011</td>
-<td>Double decrement</td>
-</tr>
-<tr>
-<td>0b0100</td>
 <td>Bitwise NOT</td>
 </tr>
 <tr>
-<td>0b0101</td>
+<td>0b0011</td>
 <td>Left shift</td>
 </tr>
 <tr>
-<td>0b0110</td>
+<td>0b0100</td>
 <td>Right shift</td>
 </tr>
 <tr>
-<td>0b0111</td>
+<td>0b0101</td>
 <td>Negation</td>
 </tr>
 <tr>
-<td>0b1000</td>
+<td>0b0110</td>
 <td>Byte swap</td>
 </tr>
 <tr>
-<td>0b1001</td>
+<td>0b0111</td>
 <td>Compare with zero</td>
 </tr>
 <tr>
-<td>0b1010-0b1111
+<td>0b1000-0b1111
 <td>Unused</td>
 </tr>
 </table>

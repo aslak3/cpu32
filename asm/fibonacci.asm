@@ -6,6 +6,8 @@ outter:		loadq.ws r10,#0x1234
 			clear r0
 			not r0
 			calljumpz dontcall		; should not call
+			andflags #0b1011		; force z to 0
+			calljumpz dontcall		; should not call
 			calljump start			; call the inner
 			return					; back to "main"
 
