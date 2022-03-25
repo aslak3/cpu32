@@ -96,12 +96,14 @@ This is of course a work in progress.
 <th>Opcode</th>
 <th>VHDL code</th>
 <th>Extension word function</th>
+<th>Processor cycles</th>
 <th>Description</th>
 </tr>
 <tr>
 <td>0x01</td>
 <td>NOP</td>
 <td>-</td>
+<td>3</td>
 <td>Does nothing for one instruction</td>
 </tr>
 <tr>
@@ -109,183 +111,214 @@ This is of course a work in progress.
 <td>0x02</td>
 <td>HALT</td>
 <td>-</td>
+<td>3 + forever</td>
 <td>Stops the processor and asserts HALT signal</td>
 </tr>
 <tr>
 <td>0x10</td>
 <td>LOADLI</td>
-<td>VALUE</td>
-<td>rN := #xx long</td>
+<td>Long value</td>
+<td>3</td>
+<td>rN := immediate long</td>
 </tr>
 <tr>
 <td>0x11</td>
 <td>LOADQWS</td>
 <td>-</td>
-<td>rN := sign extended embedded #xx word</td>
+<td>3</td>
+<td>rN := sign extended embedded word</td>
 </tr>
 <td>0x12</td>
 <td>CLEAR</td>
 <td>-</td>
+<td>3</td>
 <td>rN := 0</td>
 </tr>
 <tr>
 <td>0x20</td>
 <td>LOADR</td>
 <td>-</td>
+<td>3</td>
 <td>rN := (rM)</td>
 </tr>
 <tr>
 <td>0x21</td>
 <td>STORER</td>
 <td>-</td>
+<td>3</td>
 <td>(rA) := (rN)</td>
 </tr>
 <tr>
 <td>0x22</td>
 <td>LOADM</td>
 <td>Memory address</td>
+<td>4</td>
 <td>rN := (Memory address)</td>
 </tr>
 <tr>
 <td>0x23</td>
 <td>STOREM</td>
 <td>Memory address</td>
+<td>4</td>
 <td>(Memory address) := rN</td>
 </tr>
 <tr>
 <td>0x24</td>
 <td>LOADRD</td>
 <td>Memory displacement</td>
+<td>4</td>
 <td>rN := (rA + Memory displacement)</td>
 </tr>
 <tr>
 <td>0x25</td>
 <td>STORERD</td>
 <td>Memory dispalcement</td>
+<td>4</td>
 <td>(rA + Memory displacement) := rN</td>
 </tr>
 <tr>
 <td>0x26</td>
 <td>LOADRDQ</td>
 <td>-</td>
+<td>4</td>
 <td>rN := (rA + embedded memory displacement)</td>
 </tr>
 <tr>
 <td>0x27</td>
 <td>STORERDQ</td>
 <td>-</td>
+<td>4</td>
 <td>(rA + Embedded memory displacement) := rN</td>
 </tr>
 <tr>
 <td>0x28</td>
 <td>LOADPCD</td>
 <td>Memory displacement</td>
+<td>4</td>
 <td>rN := (PC + Memory displacement)</td>
 </tr>
 <tr>
 <td>0x29</td>
 <td>STOREPCD</td>
 <td>Memory dispalcement</td>
+<td>4</td>
 <td>(PC + Memory displacement) := rN</td>
 </tr>
 <tr>
 <td>0x2a</td>
 <td>LOADPCDQ</td>
 <td>-</td>
+<td>4</td>
 <td>rN := (PC + Embedded memory displacement)</td>
 </tr>
 <tr>
 <td>0x2b</td>
 <td>STOREPCDQ</td>
 <td>-</td>
+<td>4</td>
 <td>(PC + Embedded memory displacement) := rN</td>
 </tr>
 <tr>
 <td>0x30</td>
 <td>JUMP</td>
 <td>Memory address</td>
+<td>3</td>
 <td>If conditioncodes and mask = required -> PC := Memory address</td>
 </tr>
 <tr>
 <td>0x31</td>
 <td>BRANCH</td>
 <td>Memory displacement</td>
+<td>4</td>
 <td>If conditioncodes and mask = required -> PC := PC + Memory displacement</td>
 </tr>
 <tr>
 <td>0x32</td>
 <td>CALLJUMP</td>
 <td>Memory address</td>
+<td>5</td>
 <td>If conditioncodes and mask = required -> rSP := rSP - 4 ; (rSP) := PC ; PC := Memory address</td>
 </tr>
 <tr>
 <td>0x33</td>
 <td>CALLBRANCH</td>
 <td>Memory displacement</td>
+<td>5</td>
 <td>If conditioncodes and mask = required -> rSP := rSP - 4 ; (rSP) := PC ; PC := PC + Memory displacement</td>
 </tr>
 <tr>
 <td>0x34</td>
 <td>JUMPR</td>
 <td>-</td>
+<td>3</td>
 <td>If conditioncodes and mask = required -> PC := rN</td>
 </tr>
 <tr>
 <td>0x35</td>
 <td>CALLJUMPR</td>
 <td>-</td>
+<td>5</td>
 <td>If conditioncodes and mask = required -> rSP := rSP - 4 ; (rSP) := PC ; PC := rN</td>
 </tr>
 <tr>
 <td>0x36</td>
 <td>RETURN</td>
 <td>-</td>
+<td>3</td>
 <td>If conditioncodes and mask = required -> PC := (rSP) rSP := SP + 4 </td>
 </tr>
 <tr>
 <td>0x40</td>
 <td>ALUM</td>
 <td>-</td>
+<td>3</td>
 <td>rD := rOP2 operation rOP3</td>
 </tr>
 <tr>
 <td>0x41</td>
 <td>ALUMI</td>
 <td>Immediate operand</td>
+<td>3</td>
 <td>rD := rOP2 operation Immediate operand</td>
 </tr>
 <tr>
 <td>0x42</td>
 <td>ALUMQ</td>
 <td>-</td>
+<td>3</td>
 <td>rD := rOP2 operation Quick operand</td>
 </tr>
 <tr>
 <td>0x43</td>
 <td>ALUMS</td>
 <td>-</td>
+<td>3</td>
 <td>rD := operation rOP2</td>
 </tr>
 <tr>
 <td>0x50</td>
 <td>PUSH</td>
 <td>-</td>
+<td>4</td>
 <td>rSP := rSP - 4 ; (rSP) := rN</td>
 </tr>
 <td>0x51</td>
 <td>POP</td>
 <td>-</td>
+<td>3</td>
 <td>rN := r(SP) ; rSP := rSP + 4</td>
 </tr>
 <tr>
 <td>0x52</td>
 <td>PUSHMULTI</td>
 <td>-</td>
+<td>3 + rN count * 2</td>
 <td>for each rN set do: rSP := rSP - 4 ; (rSP) := rN</td>
 </tr>
 <td>0x51</td>
 <td>POPMULTI</td>
 <td>-</td>
+<td>3 + rN count * 2</td>
 <td>for each rN set do: rN := r(SP) ; rSP := rSP + 4</td>
 </tr>
 </table>
