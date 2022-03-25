@@ -142,9 +142,8 @@ architecture behavioural of control is
 		S_LOADM1, S_STOREM1,
 		S_LOADRD1, S_STORERD1,
 		S_BRANCH1,
-		S_ALU1,
 		S_CALL1, S_CALL2,
-		S_PUSH1, S_POP1,
+		S_PUSH1,
 		S_PUSHMULTI1, S_PUSHMULTI2, S_POPMULTI1, S_POPMULTI2
 	);
 begin
@@ -199,6 +198,20 @@ begin
 
 				when S_FETCH1 =>
 					report "In S_FETCH1";
+					case instruction_opcode is
+						when OPCODE_ALUM | OPCODE_ALUS | OPCODE_ALUMI | OPCODE_ALUMQ =>
+							last_alu_carry_out := alu_carry_out;
+							last_alu_zero_out := alu_zero_out;
+							last_alu_neg_out := alu_neg_out;
+							last_alu_over_out := alu_over_out;
+							alu_carry_in <= alu_carry_out;
+
+						when OPCODE_POP =>
+							regs_inc <= '1';
+
+						when others =>
+					end case;
+
 					address_mux_sel <= S_PC;
 					read <= '1';
 					pc_increment <= '1';
@@ -210,7 +223,7 @@ begin
 					state := S_DECODE;
 
 				when S_DECODE =>
-					case INSTRUCTION_OPCODE is
+					case instruction_opcode is
 						when OPCODE_NOP =>
 							report "Control: Opcode NOP";
 							state := S_FETCH1;
@@ -412,7 +425,7 @@ begin
 							regs_write_index_mux_sel <= S_INSTRUCTION_REG1;
 							regs_write <= '1';
 							alu_carry_in <= ALU_CARRY_OUT;
-							state := S_ALU1;
+							state := S_FETCH1;
 
 						when OPCODE_PUSH =>
 							report "Control: Opcode PUSH";
@@ -429,7 +442,7 @@ begin
 							regs_input_mux_sel <= S_DATA_IN;
 							regs_write_index_mux_sel <= S_INSTRUCTION_REG1;
 							regs_write <= '1';
-							state := S_POP1;
+							state := S_FETCH1;
 
 						when OPCODE_PUSHMULTI =>
 							report "Control: Opcode PUSHMULTI";
@@ -516,20 +529,8 @@ begin
 					pc_jump <= '1';
 					state := S_FETCH1;
 
-				when S_ALU1 =>
-					last_alu_carry_out := alu_carry_out;
-					last_alu_zero_out := alu_zero_out;
-					last_alu_neg_out := alu_neg_out;
-					last_alu_over_out := alu_over_out;
-					alu_carry_in <= alu_carry_out;
-					state := S_FETCH1;
-
 				when S_PUSH1 =>
 					write <= '1';
-					state := S_FETCH1;
-
-				when S_POP1 =>
-					regs_inc <= '1';
 					state := S_FETCH1;
 
 				when S_PUSHMULTI1 =>
