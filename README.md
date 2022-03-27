@@ -2,21 +2,21 @@
 
 This is of course a work in progress.
 
-# Rationale/Motivation
+# Rationale and motivation
 
 I had a lot of fun working on my 16 bit softcore processor (https://github.com/aslak3/cpu), and thought it would be interesting to extend the design to a 32 bit processor.
 
-* I'm one of those odd programmers who enjoy writing code in assembly. I want to produce an ISA which is pleasent to program in assembly, even if this means it does not perform as well in other envirnoments, such as when it is the target of a C compiler.
-* Carrying on from that, it would be terrific to look at producing an LLVM target for this design. And with that in mind, it should have the necessary ISA features to make running C code reasonably performant.
+* I'm one of those odd programmers who enjoys writing code in assembly. I want to produce an ISA which is pleasent to program in assembly, even if this means it does not perfom as well in other envirnoments, such as when it is the target of a C compiler.
+* Saying that, it would be terrific to look at producing an LLVM target for this design. And with that in mind, it should have the necessary ISA features to make running C code reasonably efficent, providing it doesn't compromise the fun of writing code in assembly.
 * Sitting between RISC and CISC is a nice place to be.
-  * Stack operations with multiple registers in one instruction is not very RISC like at all, and would certainly hinder a future pipelined design. None the less it's a big programmer convience.
+  * Stacking operations with multiple registers in one instruction is not very RISC like at all, and would certainly hinder a future pipelined design. None the less it's a big programmer convience.
   * On the other hand, being a load/store based processor has obvious benifits.
 * I'm happy to borrow ideas from other designs.
-* An eventual goal is to look at introducing a pipeline, though this may ential a partial or even complete redisgn of the ISA and the design itself.
+* An eventual goal is to look at introducing a pipeline, though this may entail a partial or even complete redisgn of the ISA and a scrapping of most of this implementation itself.
   * This project is also a good place to explore my interest in processor design. For instance, it would be interesting to look at switching to a microcoded control unit, just for the experience of doing so.
 * This seems like a nice logic block to use to explore other areas of computer systems design, such as memory controllers for SDRAM etc.
 
-# Summary of features, implemented and planned
+# Summary of features so far implemented
 
 ## General
 
@@ -31,28 +31,30 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 
 * Long, Word and Byte size memory accesses, with signed/unsigned extension on byte  and word reads
   - Bus error signal on unaligned word transfers
+* Memory currenly must be 32 bits wide
 
 ## Instructions
 
-* Some opcodes (like LOADI, JUMPs, BRANCHes, ALUMI, CALLs) have one following immediate value/address
-* Load an immediate 32 bit quantity at the following address
-* Load the lower 16 bit portion in one instruction word, sign extended to 32 bits
-* Load and store instructions operate either through a register, an immediate address or a register with an immediate displacement, or the program counter with an immediate displacement. Immediate displacements may either be a following long or an integrated byte, which is sign extended.
-* Clear instruction as assembler nicety
+* Some opcodes (like LOADI, JUMPs, BRANCHes, ALUMI, CALLs) have one following immediate value or address
+* Load an immediate 32 bit quantity at the following longword address in the instruction stream
+* Load the lower 16 bit portion in one instruction longword, sign extended to 32 bits
+* Load and store instructions operate either through a register, a register with an immediate displacement, the program counter with an immediate displacement, or an immediate memory address. Displacements may either be found in the following longword or an integrated (termed "quick" in the ISA) byte, which is sign extended.
+* Clear instruction as assembler nicety, which uses a quick load of zero
 * Simple status bits: zero, negative, carry and overflow
 * ALU operations including
   - add, add with carry, subtract, subtract with carry, signed and unsigned 8 bit to 16 bit multiply, and, or, xor, not, shift left, shift right, copy, negation, etc
 * ALU operations are of the form DEST <= OPERAND1 op OPERAND2, or DEST <= op OPERAND
-  - ALUMI operates with an immediate operand, eg. add r0,r1,#123
-  - ALUMQ operates with an integrated sign exteded byte inside the instruction word, eg. addq r0,r1,#2
-  - Assembler provides shorthand versions, eg: add r0,#123
+  - ALUMI operates with an immediate longword operand extrated from the instruction stream, eg. add r0,r1,#123
+  - ALUMQ operates with an embedded sign exteded byte inside the instruction word, eg. addq r0,r1,#2
+  - Assembler provides shorthand versions, eg: add r0,#123 is the same as: add r0,r0,#123
 * Conditional and uncoditional flow control, including calling subroutines and return: always, on each flag set or clear with don't cares
 * Flags (currently just the four condition codes) can be manually ORed/ANDed
 * Nop and Halt instructions
 
 ## Stack
 
-* Push and pop a single register, push and pop multiple registers eg: push r0,r1+r3+r5 - push r1, r3 and r5 onto r0.
+* Push and pop a single register eg: push (r15),r0 pushes r0 onto r15
+* push and pop multiple registers eg: push (r0),R1|R3|R5 - pushes r1, r3 and r5 onto r15.
 
 # Started
 
@@ -65,11 +67,12 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 
 # TODO
 
-* Expose condition code register and allow it to be stacked/transferred to a register
+* Expose condition code register to allow it to be stacked/transferred to a register
 * Test bench for control unit
 * Integration into FPGA environment
 * Interrupts
 * Support for narrower then 32 bit IO/memory ports
+* Start thinking about supervisor level access
 * ...
 
 # Instruction formats
@@ -147,14 +150,14 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>ORFLAGS</td>
 <td>-</td>
 <td>3</td>
-<td>Flags := Flags OR embedded value</td>
+<td>Flags := Flags OR quick value</td>
 </tr>
 <tr>
 <td>0x04</td>
 <td>ANDFLAGS</td>
 <td>-</td>
 <td>3</td>
-<td>Flags := Flags AND embedded value</td>
+<td>Flags := Flags AND quick value</td>
 </tr>
 <tr>
 <td>0x10</td>
@@ -168,13 +171,13 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>LOADQWS</td>
 <td>-</td>
 <td>3</td>
-<td>rN := sign extended embedded word</td>
+<td>rN := sign extended quick word</td>
 <tr>
 <td>0x20</td>
 <td>LOADR</td>
 <td>-</td>
 <td>3</td>
-<td>rN := (rM)</td>
+<td>rN := (rA)</td>
 </tr>
 <tr>
 <td>0x21</td>
@@ -216,14 +219,14 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>LOADRDQ</td>
 <td>-</td>
 <td>4</td>
-<td>rN := (rA + embedded memory displacement)</td>
+<td>rN := (rA + quick memory displacement)</td>
 </tr>
 <tr>
 <td>0x27</td>
 <td>STORERDQ</td>
 <td>-</td>
 <td>4</td>
-<td>(rA + Embedded memory displacement) := rN</td>
+<td>(rA + quick memory displacement) := rN</td>
 </tr>
 <tr>
 <td>0x28</td>
@@ -244,14 +247,14 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>LOADPCDQ</td>
 <td>-</td>
 <td>4</td>
-<td>rN := (PC + Embedded memory displacement)</td>
+<td>rN := (PC + quick memory displacement)</td>
 </tr>
 <tr>
 <td>0x2b</td>
 <td>STOREPCDQ</td>
 <td>-</td>
 <td>4</td>
-<td>(PC + Embedded memory displacement) := rN</td>
+<td>(PC + quick memory displacement) := rN</td>
 </tr>
 <tr>
 <td>0x30</td>
