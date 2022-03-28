@@ -60,7 +60,7 @@ architecture behavioural of cpu32 is
 	signal instruction_flow_cares : T_FLOWTYPE := (others => '0');
 	signal instruction_flow_polarity : T_FLOWTYPE := (others => '0');
 	signal instruction_quick_word : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
-	signal instruction_quick_byte : STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
+	signal instruction_quick_bytenybble : STD_LOGIC_VECTOR (11 downto 0) := (others => '0');
 	signal instruction_cycle_width : T_CYCLE_WIDTH := (others => '0');
 	signal instruction_cycle_signed : STD_LOGIC := '0';
 	signal instruction_reg1_index : T_REG_INDEX := (others => '0');
@@ -165,7 +165,7 @@ begin
 		reg2_index => instruction_reg2_index,
 		reg3_index => instruction_reg3_index,
 		quick_word => instruction_quick_word,
-		quick_byte => instruction_quick_byte,
+		quick_bytenybble => instruction_quick_bytenybble,
 
 		cycle_width => instruction_cycle_width,
 		cycle_signed => instruction_cycle_signed,
@@ -259,7 +259,7 @@ begin
 	alu_reg2_in <= 		regs_reg2_output when (alu_reg2_mux_sel = S_INSTRUCTION_REG2) else
 						pc_output;
 	alu_reg3_in <=		regs_reg3_output when (alu_reg3_mux_sel = S_INSTRUCTION_REG3) else
-						(8 to 31 => instruction_quick_byte (7)) & instruction_quick_byte when (alu_reg3_mux_sel = S_INSTRUCTION_QUICK_BYTE) else
+						(12 to 31 => instruction_quick_bytenybble (11)) & instruction_quick_bytenybble when (alu_reg3_mux_sel = S_INSTRUCTION_QUICK_BYTENYBBLE) else
 						cpu_data_in;
 	alu_op <= 			instruction_alu_op when (alu_op_mux_sel = S_INSTRUCTION_ALU_OP) else
 						OP_ADD;

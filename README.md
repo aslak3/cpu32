@@ -94,7 +94,7 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 * 23 downto 20 : register
 * 19 downto 16 : address register (not LOADM, STOREM, LOADPCD*, STOREPCD*)
 * 15 downto 13 : transfer type
-* 7 downto 0 : quick displacement (Q only)
+* 11 downto 0 : quick displacement (Q only)
 
 ## Flow control - Prefix 0x3
 
@@ -106,14 +106,21 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 
 ## ALU operations - Prefix 0x4
 
-* 31 downto 24 : opcode (ALUM, ALUMI, ALUMQ, ALUS)
+* 31 downto 24 : opcode (ALUM, ALUMI, ALUS)
 * 23 downto 20 : destination register
 * 19 downto 16 : operand register2
-* 15 downto 12 : operand register3 (ALUM only)
-* 11 downto 8 : operation code
-* 7 downto 0 : quick immediate value (ALUMQ only)
+* 15 downto 12 : operation code
+* 11 downto 8 : operand register3 (ALUM only)
 
-## Push and Pop including Multiple - Prefix 0x5
+## ALUQ operations - Prefix 0x5
+
+* 31 downto 24 : opcode (ALUQ)
+* 23 downto 20 : destination register
+* 19 downto 16 : operand register2
+* 15 downto 12 : operation code
+* 11 downto 0 : quick immediate value (ALUMQ only)
+
+## Push and Pop including Multiple - Prefix 0x6
 
 * 31 downto 24 : opcode (PUSH, POP, PUSHMULTI, POPMULTI)
 * 23 downto 20 : what to push/pop (PUSH, POP)
@@ -320,13 +327,6 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>rD := rOP2 operation Immediate operand</td>
 </tr>
 <tr>
-<td>0x42</td>
-<td>ALUMQ</td>
-<td>-</td>
-<td>3</td>
-<td>rD := rOP2 operation Quick operand</td>
-</tr>
-<tr>
 <td>0x43</td>
 <td>ALUMS</td>
 <td>-</td>
@@ -335,25 +335,32 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 </tr>
 <tr>
 <td>0x50</td>
+<td>ALUMQ</td>
+<td>-</td>
+<td>3</td>
+<td>rD := rOP2 operation Quick operand</td>
+</tr>
+<tr>
+<td>0x60</td>
 <td>PUSH</td>
 <td>-</td>
 <td>4</td>
 <td>rSP := rSP - 4 ; (rSP) := rN</td>
 </tr>
-<td>0x51</td>
+<td>0x61</td>
 <td>POP</td>
 <td>-</td>
 <td>3</td>
 <td>rN := r(SP) ; rSP := rSP + 4</td>
 </tr>
 <tr>
-<td>0x52</td>
+<td>0x62</td>
 <td>PUSHMULTI</td>
 <td>-</td>
 <td>3 + rN count * 2</td>
 <td>for each rN set do: rSP := rSP - 4 ; (rSP) := rN</td>
 </tr>
-<td>0x51</td>
+<td>0x61</td>
 <td>POPMULTI</td>
 <td>-</td>
 <td>3 + rN count * 2</td>

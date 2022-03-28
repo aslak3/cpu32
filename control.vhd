@@ -108,26 +108,32 @@ architecture behavioural of control is
 	constant OPCODE_RETURN :		T_OPCODE := x"36";
 
 	-- ALU:
-	-- 31 downto 24 : opcode (ALUM, ALUMI, ALUMQ, ALUS)
+	-- 31 downto 24 : opcode (ALUM, ALUMI, ALUS)
 	-- 23 downto 20 : destination register
 	-- 19 downto 16 : operand register1
-	-- 15 downto 12 : operand register2 (ALUM only)
-	-- 24, 11 downto 8 : operation code
-	-- 7 downto 0 : quick immediate value (ALUMQ only)
+	-- 24, 15 downto 12 : operation code
+	-- 11 downto 8 : operand register2 (ALUM only)
 	constant OPCODE_ALUM :			T_OPCODE := x"40";
 	constant OPCODE_ALUMI :			T_OPCODE := x"42";
-	constant OPCODE_ALUMQ :			T_OPCODE := x"44";
 	constant OPCODE_ALUS :			T_OPCODE := x"49";
+
+	-- ALU quick:
+	-- 31 downto 24 : opcode (ALUMQ)
+	-- 23 downto 20 : destination register
+	-- 19 downto 16 : operand register1
+	-- 24, 15 downto 12 : operation code
+	-- 11 downto 0 : quick operand
+	constant OPCODE_ALUMQ :			T_OPCODE := x"50";
 
 	-- Push and pop:
 	-- 31 downto 24 : opcode (PUSH, POP, PUSHMULTI, POPMULTI)
 	-- 23 downto 20 : what to push/pop (PUSH, POP)
 	-- 19 downto 16 : stack register
 	-- 15 downto 0 : register mask (PUSHMULTI, POPMULTI)
-	constant OPCODE_PUSH :			T_OPCODE := x"50";
-	constant OPCODE_POP :			T_OPCODE := x"51";
-	constant OPCODE_PUSHMULTI :		T_OPCODE := x"52";
-	constant OPCODE_POPMULTI :		T_OPCODE := x"53";
+	constant OPCODE_PUSH :			T_OPCODE := x"60";
+	constant OPCODE_POP :			T_OPCODE := x"61";
+	constant OPCODE_PUSHMULTI :		T_OPCODE := x"62";
+	constant OPCODE_POPMULTI :		T_OPCODE := x"63";
 
 	-- Used by jump etc
 	constant FLOWTYPE_CARRY :		integer := 3;
@@ -315,7 +321,7 @@ begin
 								read <= '1';
 							else
 								-- Quick
-								alu_reg3_mux_sel <= S_INSTRUCTION_QUICK_BYTE;
+								alu_reg3_mux_sel <= S_INSTRUCTION_QUICK_BYTENYBBLE;
 							end if;
 							if (instruction_opcode = OPCODE_LOADRD or instruction_opcode = OPCODE_STORERD or
 								instruction_opcode = OPCODE_LOADRDQ or instruction_opcode = OPCODE_STORERDQ
@@ -427,7 +433,7 @@ begin
 								alu_reg3_mux_sel <= S_DATA_IN;
 							elsif (instruction_opcode = OPCODE_ALUMQ) then
 								report "Control: Opcode ALUMQ";
-								alu_reg3_mux_sel <= S_INSTRUCTION_QUICK_BYTE;
+								alu_reg3_mux_sel <= S_INSTRUCTION_QUICK_BYTENYBBLE;
 							else
 								report "Control: Opcode ALUM/ALUS";
 								alu_reg3_mux_sel <= S_INSTRUCTION_REG3;

@@ -161,7 +161,7 @@ entity instruction is
 		input : in T_REG;
 		opcode : out T_OPCODE;
 		quick_word : out STD_LOGIC_VECTOR (15 downto 0);
-		quick_byte : out STD_LOGIC_VECTOR (7 downto 0);
+		quick_bytenybble : out STD_LOGIC_VECTOR (11 downto 0);
 		reg1_index : out T_REG_INDEX;
 		reg2_index : out T_REG_INDEX;
 		reg3_index : out T_REG_INDEX;
@@ -194,9 +194,9 @@ begin
 	opcode <= instruction_register (31 downto 24);
 	reg1_index <= instruction_register (23 downto 20);
 	reg2_index <= instruction_register (19 downto 16);
-	reg3_index <= instruction_register (15 downto 12);
+	reg3_index <= instruction_register (11 downto 8);
 	quick_word <= instruction_register (15 downto 0);
-	quick_byte <= instruction_register (7 downto 0);
+	quick_bytenybble <= instruction_register (11 downto 0);
 
 	cycle_width <= instruction_register (15 downto 14);
 	cycle_signed <= instruction_register (13);
@@ -205,5 +205,5 @@ begin
 	flow_polarity <= instruction_register (11 downto 8);
 
 	-- LSB of opcode; 0=multi, 1=single
-	alu_op <= instruction_register (24) & instruction_register (11 downto 8);
+	alu_op <= instruction_register (24) & instruction_register (15 downto 12);
 end architecture;

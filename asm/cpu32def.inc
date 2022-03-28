@@ -117,17 +117,17 @@ R15 = 0b1000000000000000
 	store.{width:storetype} ({offset}, {dst:reg}), {src:reg} =>
 		0x25 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
 	loadq.{width:loadtype} {dst:reg}, ({offset},{src:reg}) =>
-		0x26 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
+		0x26 @ dst[3:0] @ src[3:0] @ width[2:0] @ 0b0 @ offset[11:0]
 	storeq.{width:storetype} ({offset}, {dst:reg}), {src:reg} =>
-		0x27 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
+		0x27 @ src[3:0] @ dst[3:0] @ width[2:0] @ 0b0 @ offset[11:0]
 	load.{width:loadtype} {dst:reg}, ({offset}, pc) =>
 		0x28 @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
 	store.{width:storetype} ({offset}, pc), {src:reg} =>
 		0x29 @ src[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ 0x00 @ offset[31:0]
 	loadq.{width:loadtype} {dst:reg}, ({offset}, pc) =>
-		0x2a @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
+		0x2a @ dst[3:0] @ 0x0 @ width[2:0] @ 0b0 @ offset[11:0]
 	storeq.{width:storetype} ({offset}, pc), {src:reg} =>
-		0x2b @ src[3:0] @ 0x0 @ width[2:0] @ 0b0 @ 0x0 @ offset[7:0]
+		0x2b @ src[3:0] @ 0x0 @ width[2:0] @ 0b0 @ offset[11:0]
 
 	; dst register of 0xf - use r15 to save typing in asm
 	jump {target} =>
@@ -161,32 +161,32 @@ R15 = 0b1000000000000000
 
 	; long form ALU operations, ie. dest := op2 operation op3
 	{aluop:twoargalu} {dst:reg}, {operand2:reg}, {operand3:reg} =>
-		0x40 @ dst[3:0] @ operand2[3:0] @ operand3[3:0] @ aluop[3:0] @ 0x00
+		0x40 @ dst[3:0] @ operand2[3:0] @ aluop[3:0] @ operand3[3:0] @ 0x00
 	{aluop:twoargalu} {dst:reg}, {operand2:reg}, #{value} =>
-		0x42 @ dst[3:0] @ operand2[3:0] @ 0x0 @ aluop[3:0] @ 0x00 @ value[31:0]
-	{aluop:twoargalu}q {dst:reg}, {operand2:reg}, #{value} =>
-		0x44 @ dst[3:0] @ operand2[3:0] @ 0x0 @ aluop[3:0] @ value[7:0]
+		0x42 @ dst[3:0] @ operand2[3:0] @ aluop[3:0] @ 0x0 @ 0x00 @ value[31:0]
 	; same but one operand, ie. dst := operantion op2
 	{aluop:oneargalu} {dst:reg}, {operand2:reg} =>
-		0x49 @ dst[3:0] @ operand2[3:0] @ 0x0 @ aluop[3:0] @ 0x00
-
+		0x49 @ dst[3:0] @ operand2[3:0] @ aluop[3:0] @ 0x0 @ 0x00
 	; short form ALU operations, ie. dst := dst operation op3
 	{aluop:twoargalu} {dst:reg}, {operand3:reg} =>
-		0x40 @ dst[3:0] @ dst[3:0] @ operand3[3:0] @ aluop[3:0] @ 0x00
+		0x40 @ dst[3:0] @ dst[3:0] @ aluop[3:0] @ operand3[3:0] @ 0x00
 	{aluop:twoargalu} {dst:reg}, #{value} =>
-		0x42 @ dst[3:0] @ dst[3:0] @ 0x0 @ aluop[3:0] @ 0x00 @ value[31:0]
-	{aluop:twoargalu}q {dst:reg}, #{value} =>
-		0x44 @ dst[3:0] @ dst[3:0] @ 0x0 @ aluop[3:0] @ value[7:0]
+		0x42 @ dst[3:0] @ dst[3:0] @ aluop[3:0] @ 0x0 @ 0x00 @ value[31:0]
 	; same but only the destination, ie. dst := operation dst
 	{aluop:oneargalu} {dst:reg} =>
-		0x49 @ dst[3:0] @ dst[3:0] @ 0x0 @ aluop[3:0] @ 0x00
+		0x49 @ dst[3:0] @ dst[3:0] @ aluop[3:0] @ 0x0 @ 0x00
+
+	{aluop:twoargalu}q {dst:reg}, {operand2:reg}, #{value} =>
+		0x50 @ dst[3:0] @ operand2[3:0] @ aluop[3:0] @ value[11:0]
+	{aluop:twoargalu}q {dst:reg}, #{value} =>
+		0x50 @ dst[3:0] @ dst[3:0] @ aluop[3:0] @ value[11:0]
 
 	push ({dst:reg}), {src:reg} =>
-		0x50 @ src[3:0] @ dst[3:0] @ 0x0000
+		0x60 @ src[3:0] @ dst[3:0] @ 0x0000
 	pop {dst:reg}, ({src:reg}) =>
-		0x51 @ dst[3:0] @ src[3:0] @ 0x0000
+		0x61 @ dst[3:0] @ src[3:0] @ 0x0000
 	pushmulti ({dst:reg}), {src:u16} =>
-		0x52 @ 0x0 @ dst[3:0] @ src[15:0]
+		0x62 @ 0x0 @ dst[3:0] @ src[15:0]
 	popmulti {dst:u16}, ({src:reg}) =>
-		0x53 @ 0x0 @ src[3:0] @ dst[15:0]
+		0x63 @ 0x0 @ src[3:0] @ dst[15:0]
 }
