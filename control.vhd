@@ -32,8 +32,7 @@ entity control is
 
 		instruction_write : out STD_LOGIC;
 		instruction_opcode : in T_OPCODE;
-		instruction_flow_cares : in T_FLOWTYPE;
-		instruction_flow_polarity : in T_FLOWTYPE;
+		instruction_condition : in T_CONDITION;
 		instruction_cycle_width : in T_CYCLE_WIDTH;
 		instruction_cycle_signed : in STD_LOGIC;
 		instruction_quick_word : in STD_LOGIC_VECTOR (15 downto 0);
@@ -135,11 +134,28 @@ architecture behavioural of control is
 	constant OPCODE_PUSHMULTI :		T_OPCODE := x"62";
 	constant OPCODE_POPMULTI :		T_OPCODE := x"63";
 
-	-- Used by jump etc
+	-- Used by and/or of flags
 	constant FLOWTYPE_CARRY :		integer := 3;
 	constant FLOWTYPE_ZERO :		integer := 2;
 	constant FLOWTYPE_NEG :			integer := 1;
 	constant FLOWTYPE_OVER :		integer := 0;
+
+	-- Used by jump etc
+	constant COND_AL :			T_CONDITION := x"0"; -- always
+	constant COND_EQ :			T_CONDITION := x"1"; -- equal AKA zero set
+	constant COND_NE :			T_CONDITION := x"2"; -- not equal AKA zero clear
+	constant COND_CS :			T_CONDITION := x"3"; -- carry set
+	constant COND_CC :			T_CONDITION := x"4"; -- carry clear
+	constant COND_MI :			T_CONDITION := x"5"; -- minus
+	constant COND_PL :			T_CONDITION := x"6"; -- plus
+	constant COND_VS :			T_CONDITION := x"7"; -- overflow set
+	constant COND_VC :			T_CONDITION := x"8"; -- overflow clear
+	constant COND_HI :			T_CONDITION := x"9"; -- unsigned higher
+	constant COND_LS :			T_CONDITION := x"a"; -- unsigned lower than or same
+	constant COND_GE :			T_CONDITION := x"b"; -- signed greater than or equal
+	constant COND_LT :			T_CONDITION := x"c"; -- signed less than
+	constant COND_GT :			T_CONDITION := x"d"; -- signe greater than
+	constant COND_LE :			T_CONDITION := x"e"; -- signed less than or equal
 
 	type T_STATE is (
 		S_START1,
@@ -161,6 +177,7 @@ begin
 		variable last_alu_neg_out : STD_LOGIC := '0';
 		variable last_alu_over_out : STD_LOGIC := '0';
 		variable stacked : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
+		variable cond_true : STD_LOGIC := '0';
 	begin
 		if (reset = '1') then
 			state := S_START1;
@@ -349,17 +366,44 @@ begin
 							OPCODE_CALLBRANCH | OPCODE_RETURN
 						=>
 --pragma synthesis_off
-							report "Control: Jumping/Branching/Return: Cares=" & to_string(instruction_flow_cares) & " Polarity=" & to_string(instruction_flow_polarity);
+							report "Control: Jumping/Branching/Return: Condition=" & to_hstring(instruction_condition);
 --pragma synthesis_on
-							if (
-								( instruction_flow_cares = "0000" ) or
-								(
-								( ( instruction_flow_polarity(FLOWTYPE_CARRY) = LAST_ALU_CARRY_OUT ) or instruction_flow_cares(FLOWTYPE_CARRY) = '0' ) and
-								( ( instruction_flow_polarity(FLOWTYPE_ZERO) = LAST_ALU_ZERO_OUT ) or instruction_flow_cares(FLOWTYPE_ZERO) = '0' ) and
-								( ( instruction_flow_polarity(FLOWTYPE_NEG) = LAST_ALU_NEG_OUT ) or instruction_flow_cares(FLOWTYPE_NEG ) = '0' ) and
-								( ( instruction_flow_polarity(FLOWTYPE_OVER) = LAST_ALU_OVER_OUT ) or instruction_flow_cares(FLOWTYPE_OVER ) = '0' )
-								)
-							) then
+							case instruction_condition is
+								when COND_EQ =>
+									cond_true := last_alu_zero_out;
+								when COND_NE =>
+									cond_true := not last_alu_zero_out;
+								when COND_CS =>
+									cond_true := last_alu_carry_out;
+								when COND_CC =>
+									cond_true := not last_alu_carry_out;
+								when COND_MI =>
+									cond_true := last_alu_neg_out;
+								when COND_PL =>
+									cond_true := not last_alu_neg_out;
+								when COND_VS =>
+									cond_true := last_alu_over_out;
+								when COND_VC =>
+									cond_true := not last_alu_over_out;
+								when COND_HI =>
+									cond_true := last_alu_carry_out and not last_alu_zero_out;
+								when COND_LS =>
+									cond_true := not last_alu_carry_out and last_alu_zero_out;
+								when COND_GE =>
+									cond_true := last_alu_neg_out xnor last_alu_over_out;
+								when COND_LT =>
+									cond_true := last_alu_neg_out xor last_alu_over_out;
+								when COND_GT =>
+									cond_true := not last_alu_zero_out and
+										(last_alu_neg_out xnor last_alu_over_out);
+								when COND_LE =>
+									cond_true := last_alu_zero_out or
+										(last_alu_neg_out xor last_alu_over_out);
+								when others =>
+									cond_true := '1';
+							end case;
+
+							if (cond_true = '1') then
 								if (instruction_opcode = OPCODE_JUMP) then
 									report "Control: Jump taken";
 									address_mux_sel <= S_PC;

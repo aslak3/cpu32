@@ -25,5 +25,5 @@ package P_CONTROL is
 	type T_DATA_OUT_MUX_SEL is
 		( S_PC, S_INSTRUCTION_REG1 );
 
-	subtype T_FLOWTYPE is STD_LOGIC_VECTOR (3 downto 0);
+	subtype T_CONDITION is STD_LOGIC_VECTOR (3 downto 0);
 end package;

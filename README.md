@@ -36,25 +36,25 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 ## Instructions
 
 * Some opcodes (like LOADI, JUMPs, BRANCHes, ALUMI, CALLs) have one following immediate value or address
-* Load an immediate 32 bit quantity at the following longword address in the instruction stream
-* Load the lower 16 bit portion in one instruction longword, sign extended to 32 bits
-* Load and store instructions operate either through a register, a register with an immediate displacement, the program counter with an immediate displacement, or an immediate memory address. Displacements may either be found in the following longword or an integrated (termed "quick" in the ISA) byte, which is sign extended.
+* Load an immediate 32 bit quantity into a register found, the value being found at the following longword in the instruction stream
+* Load the lower 16 bit portion into a register using a single instruction longword, the value is sign extended to 32 bits
+* Load and store instructions operate either through a register, a register with an immediate displacement, the program counter with an immediate displacement, or an immediate memory address. Displacements may either be found in the following longword or an integrated (termed "quick" in the ISA) 12 bit quantity, which is sign extended.
 * Clear instruction as assembler nicety, which uses a quick load of zero
 * Simple status bits: zero, negative, carry and overflow
 * ALU operations including
   - add, add with carry, subtract, subtract with carry, signed and unsigned 8 bit to 16 bit multiply, and, or, xor, not, shift left, shift right, copy, negation, etc
 * ALU operations are of the form DEST <= OPERAND1 op OPERAND2, or DEST <= op OPERAND
   - ALUMI operates with an immediate longword operand extrated from the instruction stream, eg. add r0,r1,#123
-  - ALUMQ operates with an embedded sign exteded byte inside the instruction word, eg. addq r0,r1,#2
-  - Assembler provides shorthand versions, eg: add r0,#123 is the same as: add r0,r0,#123
-* Conditional and uncoditional flow control, including calling subroutines and return: always, on each flag set or clear with don't cares
+  - ALUMQ operates with an embedded sign exteded 12 bit quantity inside the instruction word, eg. addq r0,r1,#2
+  - Assembler provides shorthand versions, eg: add r0,#123 which is the same as: add r0,r0,#123
+* Conditional and uncoditional flow control, including calling subroutines and return: borrows the 15 conditions from ARM
 * Flags (currently just the four condition codes) can be manually ORed/ANDed
 * Nop and Halt instructions
 
 ## Stack
 
 * Push and pop a single register eg: push (r15),r0 pushes r0 onto r15
-* push and pop multiple registers eg: push (r0),R1|R3|R5 - pushes r1, r3 and r5 onto r15.
+* push and pop multiple registers eg: pushmulti (r15),R1|R3|R5 - pushes r1, r3 and r5 onto r15 in sequence, decrementing it by 12
 
 # Started
 
@@ -101,8 +101,7 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 * 31 downto 24 : opcode (JUMP, BRANCH, JUMPR, CALLJUMP, CALLBRANCH, CALLJUMPR, RETURN)
 * 23 downto 20 : new program counter register (JUMPR, CALLJUMPR)
 * 19 downto 16 : stack register (for CALL*, RETURN)
-* 15 downto 12 : flag mask
-* 11 downto 8 : flag match
+* 15 downto 12 : condition
 
 ## ALU operations - Prefix 0x4
 
@@ -114,11 +113,11 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 
 ## ALUQ operations - Prefix 0x5
 
-* 31 downto 24 : opcode (ALUQ)
+* 31 downto 24 : opcode (ALUMQ)
 * 23 downto 20 : destination register
 * 19 downto 16 : operand register2
 * 15 downto 12 : operation code
-* 11 downto 0 : quick immediate value (ALUMQ only)
+* 11 downto 0 : quick immediate value
 
 ## Push and Pop including Multiple - Prefix 0x6
 
@@ -133,7 +132,7 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <tr>
 <th>Opcode</th>
 <th>VHDL code</th>
-<th>Extension word function</th>
+<th>Extension longword</th>
 <th>Processor cycles</th>
 <th>Description</th>
 </tr>
@@ -171,7 +170,7 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>LOADLI</td>
 <td>Long value</td>
 <td>3</td>
-<td>rN := immediate long</td>
+<td>rN := Long value</td>
 </tr>
 <tr>
 <td>0x11</td>
@@ -268,49 +267,49 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>JUMP</td>
 <td>Memory address</td>
 <td>3</td>
-<td>If conditioncodes and mask = required -> PC := Memory address</td>
+<td>If condition -> PC := Memory address</td>
 </tr>
 <tr>
 <td>0x31</td>
 <td>BRANCH</td>
 <td>Memory displacement</td>
 <td>4</td>
-<td>If conditioncodes and mask = required -> PC := PC + Memory displacement</td>
+<td>If condition -> PC := PC + Memory displacement</td>
 </tr>
 <tr>
 <td>0x32</td>
 <td>CALLJUMP</td>
 <td>Memory address</td>
 <td>5</td>
-<td>If conditioncodes and mask = required -> rSP := rSP - 4 ; (rSP) := PC ; PC := Memory address</td>
+<td>If condition -> rSP := rSP - 4 ; (rSP) := PC ; PC := Memory address</td>
 </tr>
 <tr>
 <td>0x33</td>
 <td>CALLBRANCH</td>
 <td>Memory displacement</td>
 <td>5</td>
-<td>If conditioncodes and mask = required -> rSP := rSP - 4 ; (rSP) := PC ; PC := PC + Memory displacement</td>
+<td>If condition -> rSP := rSP - 4 ; (rSP) := PC ; PC := PC + Memory displacement</td>
 </tr>
 <tr>
 <td>0x34</td>
 <td>JUMPR</td>
 <td>-</td>
 <td>3</td>
-<td>If conditioncodes and mask = required -> PC := rN</td>
+<td>If condition -> PC := rN</td>
 </tr>
 <tr>
 <td>0x35</td>
 <td>CALLJUMPR</td>
 <td>-</td>
 <td>5</td>
-<td>If conditioncodes and mask = required -> rSP := rSP - 4 ; (rSP) := PC ; PC := rN</td>
+<td>If condition -> rSP := rSP - 4 ; (rSP) := PC ; PC := rN</td>
 </tr>
 <tr>
 <td>0x36</td>
 <td>RETURN</td>
 <td>-</td>
 <td>3</td>
-<td>If conditioncodes and mask = required -> PC := (rSP) rSP := SP + 4 </td>
+<td>If condition -> PC := (rSP) ; rSP := rSP + 4 </td>
 </tr>
 <tr>
 <td>0x40</td>
@@ -320,14 +319,14 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>rD := rOP2 operation rOP3</td>
 </tr>
 <tr>
-<td>0x41</td>
+<td>0x42</td>
 <td>ALUMI</td>
-<td>Immediate operand</td>
+<td>Operand</td>
 <td>3</td>
-<td>rD := rOP2 operation Immediate operand</td>
+<td>rD := rOP2 operation operand</td>
 </tr>
 <tr>
-<td>0x43</td>
+<td>0x49</td>
 <td>ALUMS</td>
 <td>-</td>
 <td>3</td>
@@ -368,7 +367,7 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 </tr>
 </table>
 
-## Flag cares and flag polarity
+## Condition flags
 
 <table>
 <tr>
@@ -377,11 +376,116 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>1</td>
 <td>0</td>
 </tr>
-<td>Overflow</td>
-<td>Carry</td>
-<td>Zero</td>
-<td>Negative</td>
+<td>V: Oerflow</td>
+<td>C: Carry</td>
+<td>Z: Zero</td>
+<td>N: Negative</td>
 </tr>
+</table>
+
+## Conditions (jumps, branches, and return)
+
+<table>
+<tr>
+<th>Hex value</th>
+<th>Assembly postfix</th>
+<th>Description</th>
+<th>Meaning</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>eq AKA zs</td>
+<td>Equal / equals zero</td>
+<td>Z</td>
+</tr>
+<tr>
+<td>2</td>
+<td>ne AKA zc</td>
+<td>Not equal</td>
+<td>!Z</td>
+</tr>
+<tr>
+<td>3</td>
+<td>cs</td>
+<td>Carry set</td>
+<td>C</td>
+</tr>
+<tr>
+<td>4</td>
+<td>cc</td>
+<td>Carry clear</td>
+<td>!C</td>
+</tr>
+<tr>
+<td>5</td>
+<td>mi</td>
+<td>Minus</td>
+<td>N</td>
+</tr>
+<tr>
+<td>6</td>
+<td>pl</td>
+<td>Plus</td>
+<td>!N</td>
+</tr>
+<tr>
+<td>7</td>
+<td>vs</td>
+<td>Overflow</td>
+<td>V</td>
+</tr>
+<tr>
+<td>8</td>
+<td>vc</td>
+<td>No overflow</td>
+<td>!V</td>
+</tr>
+<tr>
+<td>9</td>
+<td>hi</td>
+<td>Unsigned higher</td>
+<td>C and !Z</td>
+</tr>
+<tr>
+<td>A</td>
+<td>ls</td>
+<td>Unsigned lower or same</td>
+<td>!C or Z</td>
+</tr>
+<tr>
+<td>B</td>
+<td>ge</td>
+<td>Signed greater than or equal</td>
+<td>N == V</td>
+</tr>
+<tr>
+<td>C</td>
+<td>lt</td>
+<td>Signed less than</td>
+<td>N != V</td>
+</tr>
+<tr>
+<td>D</td>
+<td>gt</td>
+<td>Signed greater than</td>
+<td>!Z and (N == V)</td>
+</tr>
+<tr>
+<td>E</td>
+<td>le</td>
+<td>Signed less than or equal</td>
+<td>Z or (N != V)</td>
+</tr>
+<tr>
+<td>0, F</td>
+<td>al</td>
+<td>Always</td>
+<td>any</td>
+</tr>
+</tbody>
 </table>
 
 ## Registers

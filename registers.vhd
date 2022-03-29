@@ -38,10 +38,10 @@ begin
 --pragma synthesis_on
 				register_file (to_integer(unsigned(write_index))) <= DEFAULT_REG;
 			elsif (write = '1') then
---pragma synthesis_off
 				report "Registers: Writing " & to_hstring(input) & " into reg " & to_hstring(write_index);
---pragma synthesis_on
+				--pragma synthesis_on
 				register_file (to_integer(unsigned(write_index))) <= input;
+				--pragma synthesis_off
 			end if;
 			if (inc = '1') then
 --pragma synthesis_off
@@ -167,8 +167,7 @@ entity instruction is
 		reg3_index : out T_REG_INDEX;
 		cycle_width : out T_CYCLE_WIDTH;
 		cycle_signed : out STD_LOGIC;
-		flow_cares : out T_FLOWTYPE;
-		flow_polarity : out T_FLOWTYPE;
+		condition : out T_CONDITION;
 		alu_op : out T_ALU_OP
 	);
 end entity;
@@ -201,9 +200,9 @@ begin
 	cycle_width <= instruction_register (15 downto 14);
 	cycle_signed <= instruction_register (13);
 
-	flow_cares <= instruction_register (15 downto 12);
-	flow_polarity <= instruction_register (11 downto 8);
+	condition <= instruction_register (15 downto 12);
 
 	-- LSB of opcode; 0=multi, 1=single
 	alu_op <= instruction_register (24) & instruction_register (15 downto 12);
+
 end architecture;

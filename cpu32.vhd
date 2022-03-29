@@ -57,8 +57,7 @@ architecture behavioural of cpu32 is
 	signal instruction_write : STD_LOGIC := '0';
 	signal instruction_opcode : T_OPCODE := (others => '0');
 	signal instruction_alu_op : T_ALU_OP := (others => '0');
-	signal instruction_flow_cares : T_FLOWTYPE := (others => '0');
-	signal instruction_flow_polarity : T_FLOWTYPE := (others => '0');
+	signal instruction_condition : T_CONDITION := (others => '0');
 	signal instruction_quick_word : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
 	signal instruction_quick_bytenybble : STD_LOGIC_VECTOR (11 downto 0) := (others => '0');
 	signal instruction_cycle_width : T_CYCLE_WIDTH := (others => '0');
@@ -130,8 +129,7 @@ begin
 
 		instruction_write => instruction_write,
 		instruction_opcode => instruction_opcode,
-		instruction_flow_cares => instruction_flow_cares,
-		instruction_flow_polarity => instruction_flow_polarity,
+		instruction_condition => instruction_condition,
 		instruction_cycle_width => instruction_cycle_width,
 		instruction_cycle_signed => instruction_cycle_signed,
 		instruction_quick_word => instruction_quick_word,
@@ -170,8 +168,7 @@ begin
 		cycle_width => instruction_cycle_width,
 		cycle_signed => instruction_cycle_signed,
 
-		flow_cares => instruction_flow_cares,
-		flow_polarity => instruction_flow_polarity,
+		condition => instruction_condition,
 
 		alu_op => instruction_alu_op
 	);
