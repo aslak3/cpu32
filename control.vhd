@@ -100,11 +100,13 @@ architecture behavioural of control is
 	-- 11 downto 8 : flag match (not RETURN)
 	constant OPCODE_JUMP :			T_OPCODE := x"30";
 	constant OPCODE_BRANCH :		T_OPCODE := x"31";
-	constant OPCODE_CALLJUMP :		T_OPCODE := x"32";
-	constant OPCODE_CALLBRANCH :	T_OPCODE := x"33";
-	constant OPCODE_JUMPR :			T_OPCODE := x"34";
-	constant OPCODE_CALLJUMPR :		T_OPCODE := x"35";
-	constant OPCODE_RETURN :		T_OPCODE := x"36";
+	constant OPCODE_BRANCHQ :		T_OPCODE := x"32";
+	constant OPCODE_CALLJUMP :		T_OPCODE := x"33";
+	constant OPCODE_CALLBRANCH :	T_OPCODE := x"34";
+	constant OPCODE_CALLBRANCHQ :	T_OPCODE := x"35";
+	constant OPCODE_JUMPR :			T_OPCODE := x"36";
+	constant OPCODE_CALLJUMPR :		T_OPCODE := x"37";
+	constant OPCODE_RETURN :		T_OPCODE := x"38";
 
 	-- ALU:
 	-- 31 downto 24 : opcode (ALUM, ALUMI, ALUS)
@@ -362,8 +364,8 @@ begin
 								state := S_STORERD1;
 							end if;
 
-						when OPCODE_JUMP | OPCODE_JUMPR | OPCODE_BRANCH | OPCODE_CALLJUMP | OPCODE_CALLJUMPR |
-							OPCODE_CALLBRANCH | OPCODE_RETURN
+						when OPCODE_JUMP | OPCODE_JUMPR | OPCODE_BRANCH | OPCODE_BRANCHQ | OPCODE_CALLJUMP | OPCODE_CALLJUMPR |
+							OPCODE_CALLBRANCH | OPCODE_CALLBRANCHQ | OPCODE_RETURN
 						=>
 --pragma synthesis_off
 							report "Control: Jumping/Branching/Return: Condition=" & to_hstring(instruction_condition);
@@ -417,12 +419,18 @@ begin
 									regs_read_reg1_index_mux_sel <= S_INSTRUCTION_REG1;
 									pc_jump <= '1';
 									state := S_FETCH1;
-								elsif (instruction_opcode = OPCODE_BRANCH) then
-									report "Control: Branch taken";
-									address_mux_sel <= S_PC;
-									read <= '1';
+								elsif (instruction_opcode = OPCODE_BRANCH or
+									instruction_opcode = OPCODE_BRANCHQ)
+								then
+									report "Control: Branch(Q) taken";
 									alu_reg2_mux_sel <= S_PC;
-									alu_reg3_mux_sel <= S_DATA_IN;
+									if (instruction_opcode = OPCODE_BRANCH) then
+										address_mux_sel <= S_PC;
+										read <= '1';
+										alu_reg3_mux_sel <= S_DATA_IN;
+									else
+										alu_reg3_mux_sel <= S_INSTRUCTION_QUICK_BYTENYBBLE;
+									end if;
 									alu_op_mux_sel <= S_ADD;
 									temporary_input_mux_sel <= S_ALU_RESULT;
 									temporary_write <= '1';
@@ -438,12 +446,18 @@ begin
 								elsif (instruction_opcode = OPCODE_CALLJUMPR) then
 									report "Control: CallJumpR taken";
 									state := S_CALL1;
-								elsif (instruction_opcode = OPCODE_CALLBRANCH) then
-									report "Control: CallBranch taken";
-									address_mux_sel <= S_PC;
-									read <= '1';
+								elsif (instruction_opcode = OPCODE_CALLBRANCH or
+									instruction_opcode = OPCODE_CALLBRANCHQ)
+								then
+									report "Control: CallBranch(Q) taken";
 									alu_reg2_mux_sel <= S_PC;
-									alu_reg3_mux_sel <= S_DATA_IN;
+									if (instruction_opcode = OPCODE_CALLBRANCH) then
+										address_mux_sel <= S_PC;
+										read <= '1';
+										alu_reg3_mux_sel <= S_DATA_IN;
+									else
+										alu_reg3_mux_sel <= S_INSTRUCTION_QUICK_BYTENYBBLE;
+									end if;
 									alu_op_mux_sel <= S_ADD;
 									temporary_input_mux_sel <= S_ALU_RESULT;
 									temporary_write <= '1';
@@ -461,6 +475,7 @@ begin
 							else
 								report "Control: Jump/Branch/Return NOT taken";
 								if (not (instruction_opcode = OPCODE_JUMPR or instruction_opcode = OPCODE_CALLJUMPR or
+									instruction_opcode = OPCODE_BRANCHQ or instruction_opcode = OPCODE_CALLBRANCHQ or
 									instruction_opcode = OPCODE_RETURN))
 								then
 									pc_increment <= '1';

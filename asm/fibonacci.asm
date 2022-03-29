@@ -8,7 +8,7 @@ outter:		loadq.ws r10,#0x1234
 			calljumpzs dontcall		; should not call
 			andflags #0b1011		; force z to 0
 			calljumpzs dontcall		; should not call
-			calljump start			; call the inner
+			callbranchq start			; call the inner
 			return					; back to "main"
 
 realstart:	load.l r15,#zero		; getting the sp
@@ -35,7 +35,7 @@ loop:		copy r2,r1				; copy the last written value
 			store.w (fib,r3),r1  	; save it in fib table using dest counter
 			subq r3,#-2				; increment alternative
 			sub r4,#1				; decrement the space for fibs counter
-			branchne loop			; back if we have more room
+			branchqne loop			; back if we have more room
 done:		popmulti R10|R11,(r15)
 			return					; finished inner sub
 			#d16 0x1				; initial value

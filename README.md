@@ -47,7 +47,10 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
   - ALUMI operates with an immediate longword operand extrated from the instruction stream, eg. add r0,r1,#123
   - ALUMQ operates with an embedded sign exteded 12 bit quantity inside the instruction word, eg. addq r0,r1,#2
   - Assembler provides shorthand versions, eg: add r0,#123 which is the same as: add r0,r0,#123
-* Conditional and uncoditional flow control, including calling subroutines and return: borrows the 15 conditions from ARM
+* Flow control, including calling subroutines and return: borrows the 15 conditions from ARM
+  - Jump and call subroutine through register
+  - Branch either with a 32 bit displacement or with a quick 12 bit displacement
+  - Return can also be conditional
 * Flags (currently just the four condition codes) can be manually ORed/ANDed
 * Nop and Halt instructions
 
@@ -98,10 +101,11 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 
 ## Flow control - Prefix 0x3
 
-* 31 downto 24 : opcode (JUMP, BRANCH, JUMPR, CALLJUMP, CALLBRANCH, CALLJUMPR, RETURN)
+* 31 downto 24 : opcode (JUMP, BRANCH, BRANCHQ, JUMPR, CALLJUMP, CALLBRANCH, CALLBRANCHQ, CALLJUMPR, RETURN)
 * 23 downto 20 : new program counter register (JUMPR, CALLJUMPR)
 * 19 downto 16 : stack register (for CALL*, RETURN)
 * 15 downto 12 : condition
+* 11 downto 0 : quick displacement (BRANCHQ, CALLBRANCHQ ony)
 
 ## ALU operations - Prefix 0x4
 
@@ -278,34 +282,48 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 </tr>
 <tr>
 <td>0x32</td>
+<td>BRANCHQ</td>
+<td>-</td>
+<td>4</td>
+<td>If condition -> PC := PC + quick memory displacement</td>
+</tr>
+<tr>
+<td>0x33</td>
 <td>CALLJUMP</td>
 <td>Memory address</td>
 <td>5</td>
 <td>If condition -> rSP := rSP - 4 ; (rSP) := PC ; PC := Memory address</td>
 </tr>
 <tr>
-<td>0x33</td>
+<td>0x34</td>
 <td>CALLBRANCH</td>
 <td>Memory displacement</td>
 <td>5</td>
 <td>If condition -> rSP := rSP - 4 ; (rSP) := PC ; PC := PC + Memory displacement</td>
 </tr>
 <tr>
-<td>0x34</td>
+<td>0x35</td>
+<td>CALLBRANCHQ</td>
+<td>-</td>
+<td>5</td>
+<td>If condition -> rSP := rSP - 4 ; (rSP) := PC ; PC := PC + Quick memory displacement</td>
+</tr>
+<tr>
+<td>0x36</td>
 <td>JUMPR</td>
 <td>-</td>
 <td>3</td>
 <td>If condition -> PC := rN</td>
 </tr>
 <tr>
-<td>0x35</td>
+<td>0x37</td>
 <td>CALLJUMPR</td>
 <td>-</td>
 <td>5</td>
 <td>If condition -> rSP := rSP - 4 ; (rSP) := PC ; PC := rN</td>
 </tr>
 <tr>
-<td>0x36</td>
+<td>0x38</td>
 <td>RETURN</td>
 <td>-</td>
 <td>3</td>

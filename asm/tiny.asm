@@ -9,7 +9,7 @@ start:		load.l r0, #0x80
 			copy r10, r15
 loop:		store.l (myvar, r0), r0
 			subq r0, #4
-			jumpnc (r1)
+			jumpcc (r1)
 			halt
 
 addfour:	addq r0,#4
