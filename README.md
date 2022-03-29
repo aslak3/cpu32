@@ -389,10 +389,10 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 
 <table>
 <tr>
-<td>3</td>
-<td>2</td>
-<td>1</td>
-<td>0</td>
+<th>3</td>
+<th>2</td>
+<th>1</td>
+<th>0</td>
 </tr>
 <td>V: Oerflow</td>
 <td>C: Carry</td>
@@ -410,9 +410,6 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <th>Description</th>
 <th>Meaning</th>
 </tr>
-</thead>
-
-<tbody>
 <tr>
 <td>1</td>
 <td>eq AKA zs</td>
@@ -677,4 +674,28 @@ write very presentable assembly by, for example, combing LOADI, LOADM, LOADR and
 mnemonic with the width represented by .l, .ws, .wu, .bs or .bu. ALU operations are similarly represented.
 
 ```asm
-; ... TODO ..
+            #d32 start                    ; reset vector
+
+start:      load.l r15,#0x200             ; setup the stack pointer
+            loadq.ws r0,#1                ; intiail factorial
+            loadq.ws r3,#9                ; getting 1 to this number
+            load.l r2,#table              ; output pointer
+loop:       calljump factorial            ; get the factorial for r0 in r1
+            store.l (r2),r1               ; save it in the table
+            addq r2,#4                    ; move to the next row
+            addq r0,#1                    ; inc the number we are calculating
+            compare r0,r3                 ; got all the factorials?
+            branchqne loop                ; no? loop again
+            halt                          ; stop the proc
+
+factorial:  push (r15),r0                 ; save the param, we will use it
+            copy r1,r0                    ; start from this value
+l:          subq r0,#1                    ; loop counter
+            branchzs factorialo           ; done?
+            mulu r1,r0,r1                 ; multiply running total by previous
+            branch l                      ; get the next one
+factorialo: pop r0,(r15)                  ; restore the original param
+            return                        ; done
+
+            #d32 -1                        ; start of table marker
+table:                                     ; table of output goes here
