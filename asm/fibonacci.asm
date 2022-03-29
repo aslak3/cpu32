@@ -8,7 +8,7 @@ outter:		loadq.ws r10,#0x1234
 			calljumpzs dontcall		; should not call
 			andflags #0b1011		; force z to 0
 			calljumpzs dontcall		; should not call
-			callbranchq start			; call the inner
+			callbranchq start		; call the inner
 			return					; back to "main"
 
 realstart:	load.l r15,#zero		; getting the sp
@@ -16,7 +16,12 @@ realstart:	load.l r15,#zero		; getting the sp
 			load.l r8,#outter
 			test r8
 			calljumpzc (r8)			; call the outter sub
-hop:		branch hop				; on return, hop
+			load.l r0,#0xdeadbeef
+			store.l lastlong,r0		; so we know exit good
+hop:		branchq hop				; on return, hop
+			swap r0
+			store.l lastlong,r0		; if we somehow got here...
+			halt
 
 start:		pushmulti (r15),R10|R11
 			loadq.ws r0,#-1			; canary - r0 is a bomb
@@ -35,7 +40,7 @@ loop:		copy r2,r1				; copy the last written value
 			store.w (fib,r3),r1  	; save it in fib table using dest counter
 			subq r3,#-2				; increment alternative
 			sub r4,#1				; decrement the space for fibs counter
-			branchqne loop			; back if we have more room
+			branchne loop			; back if we have more room
 done:		popmulti R10|R11,(r15)
 			return					; finished inner sub
 			#d16 0x1				; initial value
@@ -46,3 +51,6 @@ zero:		#d16 0
 mark:		#d32 0xffffffff
 
 fib:
+
+			#addr 0x3fc
+lastlong:	#d32 -1

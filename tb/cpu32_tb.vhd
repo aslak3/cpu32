@@ -111,21 +111,20 @@ begin
 
 		for C in 0 to 8000 loop
 			clock_delay;
-			if (bus_error = '1') then
-				report "Bus error at " & to_hstring(address & '0') & " HALTED";
-				exit;
-			end if;
-			if (halted = '1') then
-				report "Processor HALT at " & to_hstring(address & '0');
+			if (bus_error = '1' or halted = '1') then
 				exit;
 			end if;
 		end loop;
 
-		if (halted = '0' and bus_error = '0') then
-			report "Processor terminated due to excessive cycles";
-		end if;
-
 		dump_ram_data;
+
+		if (bus_error = '1') then
+			report "Bus error at " & to_hstring(address & "00");
+		elsif (halted = '1') then
+			report "Processor HALT at " & to_hstring(address & "00");
+		else
+			report "Processor terminated due to excessive cycles at " & to_hstring(address & "00");
+		end if;
 
 		std.env.finish;
 	end process;

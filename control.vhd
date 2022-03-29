@@ -455,13 +455,13 @@ begin
 										address_mux_sel <= S_PC;
 										read <= '1';
 										alu_reg3_mux_sel <= S_DATA_IN;
+										pc_increment <= '1';
 									else
 										alu_reg3_mux_sel <= S_INSTRUCTION_QUICK_BYTENYBBLE;
 									end if;
 									alu_op_mux_sel <= S_ADD;
 									temporary_input_mux_sel <= S_ALU_RESULT;
 									temporary_write <= '1';
-									pc_increment <= '1';
 									state := S_CALL1;
 								elsif (instruction_opcode = OPCODE_RETURN) then
 									report "Control: Return taken";
