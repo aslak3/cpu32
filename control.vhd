@@ -27,14 +27,13 @@ entity control is
 		temporary_input_mux_sel : out T_TEMPORARY_INPUT_MUX_SEL;
 		address_mux_sel : out T_ADDRESS_MUX_SEL;
 		data_out_mux_sel : out T_DATA_OUT_MUX_SEL;
+		sized_cycle_mux_sel : out STD_LOGIC;
 
 		stack_multi_reg_index : out T_REG_INDEX;
 
 		instruction_write : out STD_LOGIC;
 		instruction_opcode : in T_OPCODE;
 		instruction_condition : in T_CONDITION;
-		instruction_cycle_width : in T_CYCLE_WIDTH;
-		instruction_cycle_signed : in STD_LOGIC;
 		instruction_quick_word : in STD_LOGIC_VECTOR (15 downto 0);
 
 		alu_carry_in : out STD_LOGIC;
@@ -197,8 +196,7 @@ begin
 			data_out_mux_sel <= S_PC;
 		elsif (clock'Event and clock = '1') then
 			alu_carry_in <= '0';
-			cycle_width <= CW_LONG;
-			cycle_signed <= '0';
+			sized_cycle_mux_sel <= '0';
 
 			read <= '0';
 			write <= '0';
@@ -260,7 +258,9 @@ begin
 							state := S_HALT1;
 
 						when OPCODE_ORFLAGS =>
+--pragma synthesis_off
 							report "Control: Opcode ORFLAGS with " & to_string(instruction_quick_word);
+--pragma synthesis_on
 							last_alu_carry_out := last_alu_carry_out or instruction_quick_word (FLOWTYPE_CARRY);
 							last_alu_zero_out := alu_zero_out or instruction_quick_word (FLOWTYPE_ZERO);
 							last_alu_neg_out := alu_neg_out or instruction_quick_word (FLOWTYPE_NEG);
@@ -268,7 +268,9 @@ begin
 							state := S_FETCH1;
 
 						when OPCODE_ANDFLAGS =>
+--pragma synthesis_off
 							report "Control: Opcode ANDFLAGS with " & to_string(instruction_quick_word);
+--pragma synthesis_on
 							last_alu_carry_out := last_alu_carry_out and instruction_quick_word (FLOWTYPE_CARRY);
 							last_alu_zero_out := alu_zero_out and instruction_quick_word (FLOWTYPE_ZERO);
 							last_alu_neg_out := alu_neg_out and instruction_quick_word (FLOWTYPE_NEG);
@@ -295,9 +297,8 @@ begin
 						when OPCODE_LOADR =>
 							report "Control: Opcode LOADR";
 							address_mux_sel <= S_INSTRUCTION_REG2;
+							sized_cycle_mux_sel <= '1';
 							read <= '1';
-							cycle_width <= instruction_cycle_width;
-							cycle_signed <= instruction_cycle_signed;
 							regs_input_mux_sel <= S_DATA_IN;
 							regs_write_index_mux_sel <= S_INSTRUCTION_REG1;
 							regs_write <= '1';
@@ -307,8 +308,8 @@ begin
 							report "Control: Opcode STORER";
 							address_mux_sel <= S_INSTRUCTION_REG2;
 							data_out_mux_sel <= S_INSTRUCTION_REG1;
+							sized_cycle_mux_sel <= '1';
 							write <= '1';
-							cycle_width <= instruction_cycle_width;
 							state := S_FETCH1;
 
 						when OPCODE_LOADM =>
@@ -544,11 +545,10 @@ begin
 
 				when S_LOADM1 =>
 					address_mux_sel <= S_TEMPORARY_OUTPUT;
+					sized_cycle_mux_sel <= '1';
 					read <= '1';
 					regs_input_mux_sel <= S_DATA_IN;
 					pc_increment <= '1';
-					cycle_width <= instruction_cycle_width;
-					cycle_signed <= instruction_cycle_signed;
 					regs_write_index_mux_sel <= S_INSTRUCTION_REG1;
 					regs_write <= '1';
 					state := S_FETCH1;
@@ -557,16 +557,15 @@ begin
 					address_mux_sel <= S_TEMPORARY_OUTPUT;
 					data_out_mux_sel <= S_INSTRUCTION_REG1;
 					regs_read_reg1_index_mux_sel <= S_INSTRUCTION_REG1;
+					sized_cycle_mux_sel <= '1';
 					write <= '1';
-					cycle_width <= INSTRUCTION_CYCLE_WIDTH;
 					pc_increment <= '1';
 					state := S_FETCH1;
 
 				when S_LOADRD1 =>
 					address_mux_sel <= S_TEMPORARY_OUTPUT;
+					sized_cycle_mux_sel <= '1';
 					read <= '1';
-					cycle_width <= INSTRUCTION_CYCLE_WIDTH;
-					cycle_signed <= instruction_cycle_signed;
 					regs_input_mux_sel <= S_DATA_IN;
 					regs_write <= '1';
 					if (instruction_opcode = OPCODE_LOADRD or instruction_opcode = OPCODE_LOADPCD) then
@@ -578,8 +577,8 @@ begin
 					address_mux_sel <= S_TEMPORARY_OUTPUT;
 					regs_read_reg1_index_mux_sel <= S_INSTRUCTION_REG1;
 					data_out_mux_sel <= S_INSTRUCTION_REG1;
+					sized_cycle_mux_sel <= '1';
 					write <= '1';
-					cycle_width <= INSTRUCTION_CYCLE_WIDTH;
 					if (instruction_opcode = OPCODE_STORERD or instruction_opcode = OPCODE_STOREPCD) then
 						pc_increment <= '1';
 					end if;

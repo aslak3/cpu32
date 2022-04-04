@@ -38,10 +38,10 @@ begin
 --pragma synthesis_on
 				register_file (to_integer(unsigned(write_index))) <= DEFAULT_REG;
 			elsif (write = '1') then
+--pragma synthesis_off
 				report "Registers: Writing " & to_hstring(input) & " into reg " & to_hstring(write_index);
-				--pragma synthesis_on
+--pragma synthesis_on
 				register_file (to_integer(unsigned(write_index))) <= input;
-				--pragma synthesis_off
 			end if;
 			if (inc = '1') then
 --pragma synthesis_off

@@ -38,6 +38,7 @@ architecture behavioural of cpu32 is
 	signal temporary_input_mux_sel : T_TEMPORARY_INPUT_MUX_SEL := S_ALU_RESULT;
 	signal address_mux_sel : T_ADDRESS_MUX_SEL := S_PC;
 	signal data_out_mux_sel : T_DATA_OUT_MUX_SEL := S_PC;
+	signal sized_cycle_mux_sel : STD_LOGIC := '1';
 
 	-- For push pop multi
 	signal stack_multi_reg_index : T_REG_INDEX := (others => '0');
@@ -110,8 +111,6 @@ begin
 		reset => reset,
 		read => cpu_read,
 		write => cpu_write,
-		cycle_width => cpu_cycle_width,
-		cycle_signed => cpu_cycle_signed,
 		halted => halted,
 
 		alu_reg2_mux_sel => alu_reg2_mux_sel,
@@ -124,14 +123,13 @@ begin
 		temporary_input_mux_sel => temporary_input_mux_sel,
 		address_mux_sel => address_mux_sel,
 		data_out_mux_sel => data_out_mux_sel,
+		sized_cycle_mux_sel => sized_cycle_mux_sel,
 
 		stack_multi_reg_index => stack_multi_reg_index,
 
 		instruction_write => instruction_write,
 		instruction_opcode => instruction_opcode,
 		instruction_condition => instruction_condition,
-		instruction_cycle_width => instruction_cycle_width,
-		instruction_cycle_signed => instruction_cycle_signed,
 		instruction_quick_word => instruction_quick_word,
 
 		alu_carry_in => alu_carry_in,
@@ -268,8 +266,6 @@ begin
 	regs_read_reg1_index <=
 						instruction_reg1_index when (regs_read_reg1_index_mux_sel = S_INSTRUCTION_REG1) else
 						stack_multi_reg_index;
-	temporary_input <=	cpu_data_in when (temporary_input_mux_sel = S_DATA_IN) else
-						alu_result;
 	pc_input <=			cpu_data_in when (pc_input_mux_sel = S_DATA_IN) else
 						temporary_output when (pc_input_mux_sel = S_TEMPORARY_OUTPUT) else
 						regs_reg1_output when (pc_input_mux_sel = S_INSTRUCTION_REG1) else
@@ -282,6 +278,10 @@ begin
 						temporary_output;
 	cpu_data_out <=		pc_output when (data_out_mux_sel = S_PC) else
 						regs_reg1_output;
+	cpu_cycle_width <=	instruction_cycle_width when (sized_cycle_mux_sel = '1') else
+						CW_LONG;
+	cpu_cycle_signed <=	instruction_cycle_signed when (sized_cycle_mux_sel = '1') else
+						'0';
 
 	cpu_bus_active <= '1' when (cpu_read = '1' or cpu_write = '1') else '0';
 
