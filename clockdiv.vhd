@@ -11,7 +11,7 @@ entity clockdiv is
 end entity;
 
 architecture behavioral of clockdiv is
-	signal counter : STD_LOGIC_VECTOR (1 downto 0) := (others => '0');
+	signal counter : STD_LOGIC_VECTOR (2 downto 0) := (others => '0');
 begin
 	process (clock)
 	begin
@@ -19,5 +19,5 @@ begin
 			counter <= counter + 1;
 		end if;
 	end process;
-	clock_main <= counter (1);
+	clock_main <= counter (2);
 end architecture;

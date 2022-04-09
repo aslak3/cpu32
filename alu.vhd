@@ -113,7 +113,7 @@ begin
 				temp_result := (others => '0');
 		end case;
 
-		if (GIVE_RESULT = '1') then
+		if (give_result = '1') then
 			result <= temp_result (31 downto 0);
 		else
 			result <= reg2;

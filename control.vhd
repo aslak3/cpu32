@@ -77,7 +77,7 @@ architecture behavioural of control is
 	-- 19 downto 16 : address register (not LOADM, STOREM, LOADPCD, STOREPCD, LOADPCDQ, STOREPCDQ)
 	-- 15 downto 14 : transfer type
 	-- 13 : signed
-	-- 7 downto 0 : displacement (LOADRDQ, STORERDQ, LOADPCDQ, STOREPCDQ)
+	-- 11 downto 0 : displacement (LOADRDQ, STORERDQ, LOADPCDQ, STOREPCDQ)
 	constant OPCODE_LOADR :			T_OPCODE := x"20";
 	constant OPCODE_STORER :		T_OPCODE := x"21";
 	constant OPCODE_LOADM :			T_OPCODE := x"22";
@@ -389,9 +389,9 @@ begin
 								when COND_VC =>
 									cond_true := not last_alu_over_out;
 								when COND_HI =>
-									cond_true := last_alu_carry_out and not last_alu_zero_out;
+									cond_true := not last_alu_carry_out and not last_alu_zero_out;
 								when COND_LS =>
-									cond_true := not last_alu_carry_out and last_alu_zero_out;
+									cond_true := last_alu_carry_out or last_alu_zero_out;
 								when COND_GE =>
 									cond_true := last_alu_neg_out xnor last_alu_over_out;
 								when COND_LT =>

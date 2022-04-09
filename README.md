@@ -462,13 +462,13 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>9</td>
 <td>hi</td>
 <td>Unsigned higher</td>
-<td>C and !Z</td>
+<td>!C and !Z</td>
 </tr>
 <tr>
 <td>A</td>
 <td>ls</td>
 <td>Unsigned lower or same</td>
-<td>!C or Z</td>
+<td>C or Z</td>
 </tr>
 <tr>
 <td>B</td>
