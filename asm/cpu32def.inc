@@ -98,6 +98,8 @@ R15 = 0b1000000000000000
 	negate     => 0x7
 	swap       => 0x8
 	test       => 0x9
+	signextb   => 0xa
+	signextw   => 0xb
 }
 
 #ruledef

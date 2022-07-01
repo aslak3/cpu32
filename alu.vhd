@@ -25,6 +25,8 @@ package P_ALU_OPS is
 	constant OP_NEG :			T_ALU_OP := '1' & x"7";
 	constant OP_SWAP :			T_ALU_OP := '1' & x"8";
 	constant OP_TEST :			T_ALU_OP := '1' & x"9";
+	constant OP_SIGN_EXT_B :	T_ALU_OP := '1' & x"a";
+	constant OP_SIGN_EXT_W :	T_ALU_OP := '1' & x"b";
 end package;
 
 library IEEE;
@@ -108,6 +110,10 @@ begin
 			when OP_TEST =>
 				temp_result := temp_reg2;
 				give_result := '0';
+			when OP_SIGN_EXT_B =>
+				temp_result := '0' & (31 downto 8 => temp_reg2 (7)) & temp_reg2 (7 downto 0);
+			when OP_SIGN_EXT_W =>
+				temp_result := '0' & (31 downto 16 => temp_reg2 (15)) & temp_reg2 (15 downto 0);
 
 			when others =>
 				temp_result := (others => '0');

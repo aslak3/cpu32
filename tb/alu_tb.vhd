@@ -170,6 +170,12 @@ begin
 		run_test(op_test,			x"ffffffff", x"00000000", '0', x"ffffffff", '0', '0', '1', '0');
 		run_test(op_test,			x"00000000", x"00000000", '0', x"00000000", '0', '1', '0', '0');
 
+		run_test(op_sign_ext_w,		x"00007fff", x"00000000", '0', x"00007fff", '0', '0', '0', '0');
+		run_test(op_sign_ext_w,		x"0000ffff", x"00000000", '0', x"ffffffff", '0', '0', '1', '0');
+
+		run_test(op_sign_ext_b,		x"0000007f", x"00000000", '0', x"0000007f", '0', '0', '0', '0');
+		run_test(op_sign_ext_b,		x"000000ff", x"00000000", '0', x"ffffffff", '0', '0', '1', '0');
+
 		report "+++all good";
 		std.env.finish;
 	end process;
