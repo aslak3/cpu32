@@ -42,7 +42,7 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 * Clear instruction as assembler nicety, which uses a quick load of zero
 * Simple status bits: zero, negative, carry and overflow
 * ALU operations including
-  - add, add with carry, subtract, subtract with carry, signed and unsigned 8 bit to 16 bit multiply, and, or, xor, not, shift left, shift right, copy, negation, etc
+  - add, add with carry, subtract, subtract with carry, signed and unsigned 8 bit to 16 bit multiply, and, or, xor, not, shift left, shift right, copy, negation, sign extensions, etc
 * ALU operations are of the form DEST <= OPERAND1 op OPERAND2, or DEST <= op OPERAND
   - ALUMI operates with an immediate longword operand extrated from the instruction stream, eg. add r0,r1,#123
   - ALUMQ operates with an embedded sign exteded 12 bit quantity inside the instruction word, eg. addq r0,r1,#2
@@ -53,6 +53,7 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
   - Return can also be conditional
 * Flags (currently just the four condition codes) can be manually ORed/ANDed
 * Nop and Halt instructions
+* Register to register copy
 
 ## Stack
 
@@ -129,6 +130,12 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 * 23 downto 20 : what to push/pop (PUSH, POP)
 * 19 downto 16 : stack register
 * 15 downto 0 : register mask (PUSHMULTI, POPMULTI)
+
+## Copy registers - Prefix 0x7
+
+* 31 downto 24 : opcode (COPY)
+* 23 downto 20 : destination
+* 19 downto 16 : source
 
 # Opcode details
 
@@ -382,6 +389,13 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 <td>-</td>
 <td>3 + rN count * 2</td>
 <td>for each rN set do: rN := r(SP) ; rSP := rSP + 4</td>
+</tr>
+</tr>
+<td>0x70</td>
+<td>COPY</td>
+<td>-</td>
+<td>3</td>
+<td>rD := rS</td>
 </tr>
 </table>
 

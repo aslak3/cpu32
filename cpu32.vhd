@@ -260,6 +260,7 @@ begin
 						OP_ADD;
 	regs_input <= 		alu_result when (regs_input_mux_sel = S_ALU_RESULT) else
 						cpu_data_in_extended when (regs_input_mux_sel = S_DATA_IN) else
+						regs_reg2_output when (regs_input_mux_sel = S_INSTRUCTION_REG2) else
 						(16 to 31 => instruction_quick_word (15)) & instruction_quick_word;
 	regs_write_index <=	instruction_reg1_index when (regs_write_index_mux_sel = S_INSTRUCTION_REG1) else
 						stack_multi_reg_index;

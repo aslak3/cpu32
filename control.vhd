@@ -135,6 +135,12 @@ architecture behavioural of control is
 	constant OPCODE_PUSHMULTI :		T_OPCODE := x"62";
 	constant OPCODE_POPMULTI :		T_OPCODE := x"63";
 
+	-- Register copy:
+	-- 31 downto 24 : opcode (COPY)
+	-- 23 downto 20 : destination register
+	-- 19 downto 16 : source register
+	constant OPCODE_COPY :			T_OPCODE := x"70";
+
 	-- Used by and/or of flags
 	constant FLOWTYPE_CARRY :		integer := 3;
 	constant FLOWTYPE_ZERO :		integer := 2;
@@ -531,6 +537,13 @@ begin
 							report "Control: Opcode POPMULTI";
 							stacked := (others => '0');
 							state := S_POPMULTI1;
+
+						when OPCODE_COPY =>
+							report "Control: Opcode COPY";
+							regs_input_mux_sel <= S_INSTRUCTION_REG2;
+							regs_write_index_mux_sel <= S_INSTRUCTION_REG1;
+							regs_write <= '1';
+							state := S_FETCH1;
 
 						when others =>
 							report "Control: No opcode match!";
