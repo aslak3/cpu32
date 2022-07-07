@@ -602,7 +602,7 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 </tr>
 <tr>
 <td>0b0111</td>
-<td>Copy</td>
+<td>Copy (does not update flags)</td>
 </tr>
 <tr>
 <td>0b1000</td>
@@ -643,26 +643,42 @@ I had a lot of fun working on my 16 bit softcore processor (https://github.com/a
 </tr>
 <tr>
 <td>0b0011</td>
-<td>Left shift</td>
+<td>Logic shift left</td>
 </tr>
 <tr>
 <td>0b0100</td>
-<td>Right shift</td>
+<td>Logic shift right</td>
 </tr>
 <tr>
 <td>0b0101</td>
-<td>Negation</td>
+<td>Arithmetic shift left</td>
 </tr>
 <tr>
 <td>0b0110</td>
-<td>Byte swap</td>
+<td>Arithmetic shift right</td>
 </tr>
 <tr>
 <td>0b0111</td>
+<td>Negation</td>
+</tr>
+<tr>
+<td>0b1000</td>
+<td>Byte swap</td>
+</tr>
+<tr>
+<td>0b1001</td>
 <td>Compare with zero</td>
 </tr>
 <tr>
-<td>0b1000-0b1111
+<td>0b1010</td>
+<td>Sign extend word</td>
+</tr>
+<tr>
+<td>0b1011</td>
+<td>Sign extend byte</td>
+</tr>
+<tr>
+<td>0b1100-0b1111
 <td>Unused</td>
 </tr>
 </table>

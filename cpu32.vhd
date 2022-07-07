@@ -38,7 +38,7 @@ architecture behavioural of cpu32 is
 	signal temporary_input_mux_sel : T_TEMPORARY_INPUT_MUX_SEL := S_ALU_RESULT;
 	signal address_mux_sel : T_ADDRESS_MUX_SEL := S_PC;
 	signal data_out_mux_sel : T_DATA_OUT_MUX_SEL := S_PC;
-	signal sized_cycle_mux_sel : STD_LOGIC := '1';
+	signal sized_cycle_mux_sel : STD_LOGIC := '0';
 
 	-- For push pop multi
 	signal stack_multi_reg_index : T_REG_INDEX := (others => '0');

@@ -66,7 +66,7 @@ begin
 
 	ram_data_in <= data_out when (write = '1' and address (14 downto 12) = "000") else x"00000000";
 	ram_write <= '1' when (write = '1' and address (14 downto 12) = "000") else '0';
-	ledr <= data_out when (write = '1' and address (14 downto 7) = x"80");
+	ledr <= data_out when (write = '1' and address (29 downto 26) = x"f");
 	sevenseg_data <= data_out when (write = '1' and address (14 downto 7) = x"81");
 	vga_data_in <= data_out when (write = '1' and address (14) = '1');
 

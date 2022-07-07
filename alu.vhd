@@ -56,8 +56,10 @@ begin
 		variable temp_reg3 : STD_LOGIC_VECTOR (32 downto 0) := (others => '0');
 		variable temp_result : STD_LOGIC_VECTOR (32 downto 0) := (others => '0');
 		variable give_result : STD_LOGIC := '0';
+		variable update_flags : STD_LOGIC := '0';
 	begin
 		give_result := '1';
+		update_flags := '1';
 		temp_reg2 := '0' & reg2 (31 downto 0);
 		temp_reg3 := '0' & reg3 (31 downto 0);
 
@@ -78,6 +80,7 @@ begin
 				temp_result := temp_reg2 xor temp_reg3;
 			when OP_COPY =>
 				temp_result := temp_reg3;
+				update_flags := '0';
 			when OP_COMP =>
 				temp_result := temp_reg2 - temp_reg3;
 				give_result := '0';
@@ -125,40 +128,42 @@ begin
 			result <= reg2;
 		end if;
 
-		carry_out <= temp_result (32);
+		if (update_flags = '1') then
+			carry_out <= temp_result (32);
 
-		if (temp_result (31 downto 0) = x"00000000") then
-			zero_out <= '1';
-		else
-			zero_out <= '0';
-		end if;
+			if (temp_result (31 downto 0) = x"00000000") then
+				zero_out <= '1';
+			else
+				zero_out <= '0';
+			end if;
 
-		neg_out <= temp_result (31);
+			neg_out <= temp_result (31);
 
-		-- When adding then if sign of result is different to the sign of both the
-		-- operands then it is an overflow condition
-		if (OP = OP_ADD or OP = OP_ADDC) then
-			if (temp_reg3 (31) /= temp_result (31) and temp_reg2 (31) /= temp_result (31)) then
-				over_out <= '1';
+			-- When adding then if sign of result is different to the sign of both the
+			-- operands then it is an overflow condition
+			if (OP = OP_ADD or OP = OP_ADDC) then
+				if (temp_reg3 (31) /= temp_result (31) and temp_reg2 (31) /= temp_result (31)) then
+					over_out <= '1';
+				else
+					over_out <= '0';
+				end if;
+			-- Likewise for sub, but invert the reg3 sign for test as its a subtract
+			elsif (OP = OP_SUB or OP = OP_SUBC) then
+				if (temp_reg3 (31) = temp_result (31) and temp_reg2 (31) /= temp_result (31)) then
+					over_out <= '1';
+				else
+					over_out <= '0';
+				end if;
+				-- For arith shift reg3, if the sign changed then it is an overflow
+			elsif (OP = OP_ARITH_LEFT) then
+				if (temp_reg2 (31) /= temp_result (31)) then
+					over_out <= '1';
+				else
+					over_out <= '0';
+				end if;
 			else
 				over_out <= '0';
 			end if;
-		-- Likewise for sub, but invert the reg3 sign for test as its a subtract
-		elsif (OP = OP_SUB or OP = OP_SUBC) then
-			if (temp_reg3 (31) = temp_result (31) and temp_reg2 (31) /= temp_result (31)) then
-				over_out <= '1';
-			else
-				over_out <= '0';
-			end if;
-		-- For arith shift reg3, if the sign changed then it is an overflow
-		elsif (OP = OP_ARITH_LEFT) then
-			if (temp_reg2 (31) /= temp_result (31)) then
-				over_out <= '1';
-			else
-				over_out <= '0';
-			end if;
-		else
-			over_out <= '0';
 		end if;
 	end process;
 end architecture;
